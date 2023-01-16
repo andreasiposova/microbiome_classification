@@ -1,0 +1,21 @@
+\begin{tabular}{llrrrrrr}
+\toprule
+{} &                                    best parameters &  accuracy &  precision &  recall &  roc\_auc &  f1 &  f2 \\
+Diversity               &                                                    &           &            &         &          &     &     \\
+\midrule
+pielou\_e\_diversity      &  \{'bootstrap': True, 'ccp\_alpha': 0.0, 'class\_w... &       NaN &        NaN &     NaN &      NaN & NaN & NaN \\
+simpson\_diversity       &  \{'bootstrap': True, 'ccp\_alpha': 0.0, 'class\_w... &       NaN &        NaN &     NaN &      NaN & NaN & NaN \\
+phylum\_relative         &  \{'bootstrap': True, 'ccp\_alpha': 0.0, 'class\_w... &       NaN &        NaN &     NaN &      NaN & NaN & NaN \\
+observed\_otus\_diversity &  \{'bootstrap': True, 'ccp\_alpha': 0.0, 'class\_w... &       NaN &        NaN &     NaN &      NaN & NaN & NaN \\
+family\_relative         &  \{'bootstrap': True, 'ccp\_alpha': 0.0, 'class\_w... &       NaN &        NaN &     NaN &      NaN & NaN & NaN \\
+class\_relative          &  \{'bootstrap': True, 'ccp\_alpha': 0.0, 'class\_w... &       NaN &        NaN &     NaN &      NaN & NaN & NaN \\
+fb\_ratio                &  \{'bootstrap': True, 'ccp\_alpha': 0.0, 'class\_w... &       NaN &        NaN &     NaN &      NaN & NaN & NaN \\
+enterotype              &  \{'bootstrap': True, 'ccp\_alpha': 0.0, 'class\_w... &       NaN &        NaN &     NaN &      NaN & NaN & NaN \\
+genus\_relative          &  \{'bootstrap': True, 'ccp\_alpha': 0.0, 'class\_w... &       NaN &        NaN &     NaN &      NaN & NaN & NaN \\
+species\_relative        &  \{'bootstrap': True, 'ccp\_alpha': 0.0, 'class\_w... &       NaN &        NaN &     NaN &      NaN & NaN & NaN \\
+shannon\_diversity       &  \{'bootstrap': True, 'ccp\_alpha': 0.0, 'class\_w... &       NaN &        NaN &     NaN &      NaN & NaN & NaN \\
+domain\_relative         &  \{'bootstrap': True, 'ccp\_alpha': 0.0, 'class\_w... &       NaN &        NaN &     NaN &      NaN & NaN & NaN \\
+order\_relative          &  \{'bootstrap': True, 'ccp\_alpha': 0.0, 'class\_w... &       NaN &        NaN &     NaN &      NaN & NaN & NaN \\
+simpson\_e\_diversity     &  \{'bootstrap': True, 'ccp\_alpha': 0.0, 'class\_w... &       NaN &        NaN &     NaN &      NaN & NaN & NaN \\
+\bottomrule
+\end{tabular}

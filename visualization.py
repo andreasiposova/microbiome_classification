@@ -19,7 +19,7 @@ def get_scores(test_scores):
     scores.append(f2_values)
     return scores
 
-def sensitivity_plot(metric, scores, file_name, xlabel):
+def sensitivity_plot(hyperparam, scores, file_name, xlabel):
     accuracy_values = scores[0]
     precision_values = scores[1]
     recall_values = scores[2]
@@ -28,12 +28,12 @@ def sensitivity_plot(metric, scores, file_name, xlabel):
     f2_values = scores[5]
 
 
-    plt.plot(metric, accuracy_values, label='Accuracy')
-    plt.plot(metric, precision_values, label='Precision')
-    plt.plot(metric, recall_values, label='Recall')
-    plt.plot(metric, roc_auc_values, label='ROC AUC Score')
-    plt.plot(metric, f1_values, label='F1 Score')
-    plt.plot(metric, f2_values, label='F2 Score')
+    plt.plot(hyperparam, accuracy_values, label='Accuracy')
+    plt.plot(hyperparam, precision_values, label='Precision')
+    plt.plot(hyperparam, recall_values, label='Recall')
+    plt.plot(hyperparam, roc_auc_values, label='ROC AUC Score')
+    plt.plot(hyperparam, f1_values, label='F1 Score')
+    plt.plot(hyperparam, f2_values, label='F2 Score')
     plt.xlabel(xlabel)
     plt.ylabel('Score')
     plt.legend()

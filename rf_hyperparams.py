@@ -47,7 +47,7 @@ fudan_data = load_tsv_files(fudan_filepath)
 def grid_search_rf(X_train, X_test, y_train, y_test, file_name):
 
     param_grid = {
-        'n_estimators': [1, 10, 50],# 50, 100, 200],
+        'n_estimators': [5, 50, 100],# 50, 100, 200],
         'max_depth': [None], #, 5, 10, 20],
         'min_samples_split': [2], #, 5, 10],
         'min_samples_leaf': [1],# 2, 4],
@@ -71,7 +71,7 @@ def grid_search_rf(X_train, X_test, y_train, y_test, file_name):
     best_estimator = grid_search.best_estimator_
     results = grid_search.cv_results_
     test_scores = []
-    accuracies = []
+
     for i in range(len(grid_search.cv_results_['params'])):
         print(grid_search.cv_results_['params'][i])
         rf_ = RandomForestClassifier(**grid_search.cv_results_['params'][i])
@@ -84,15 +84,14 @@ def grid_search_rf(X_train, X_test, y_train, y_test, file_name):
         f1 = f1_score(y_test, y_pred)
         f2 = fbeta_score(y_test, y_pred, beta=2)
 
-        accuracies.append(accuracy)
-        full_results = []
         test_scores.append({'file': file_name, 'params': grid_search.cv_results_['params'][i],
                             'accuracy': accuracy, 'precision': precision,
                             'recall': recall, 'roc_auc': roc_auc, 'f1': f1, 'f2': f2})
-    return test_scores
+
+    print(test_scores)
 
     # Get the best estimator
-    best_estimator = grid_search.best_estimator_
+    best_estimator_params = best_estimator.get_params()
 
     # Evaluate the best estimator on X_test and y_test
     y_pred = best_estimator.predict(X_test)
@@ -102,9 +101,9 @@ def grid_search_rf(X_train, X_test, y_train, y_test, file_name):
     roc_auc = roc_auc_score(y_test, y_pred)
     f1 = f1_score(y_test, y_pred)
     f2 = fbeta_score(y_test, y_pred, beta=2)
-
+    best_res = {'accuracy': accuracy, 'precision': precision, 'recall': recall, 'roc_auc': roc_auc, 'f1': f1, 'f2': f2}
     # Return the results
-    return {'accuracy': accuracy, 'precision': precision, 'recall': recall, 'roc_auc': roc_auc, 'f1': f1, 'f2': f2}
+    return test_scores, best_res, best_estimator_params
 
 
 
@@ -139,9 +138,36 @@ def visualize_results(test_scores, file_name):
 full_results = []
 for key in fudan_data:
     X_train, X_test, y_train, y_test = preprocess_data(fudan_data[key], yang_metadata_path)
-    results = grid_search_rf(X_train, X_test, y_train, y_test, file_name=key)
-    full_results.append(results)
-    visualize_results(results, key)
+    scores, best_results, best_estimator = grid_search_rf(X_train, X_test, y_train, y_test, file_name=key)
+    full_results.append([str(key),best_estimator, best_results])
+    visualize_results(scores, key)
     print(full_results)
+
+
+d = {'Diversity': [], 'best parameters': [], 'metrics': []}
+for i in full_results:
+    d['Diversity'].append(i[0])
+    d['best parameters'].append(i[1])
+    d['metrics'].append(i[2])
+
+df = pd.DataFrame(d)
+df.set_index(['Diversity'], inplace=True)
+
+# split 'metrics' column into separate columns
+df_metrics = pd.json_normalize(df['metrics'])
+
+# join the new DataFrame with the original one
+df = df.join(df_metrics)
+
+# drop the 'metrics' column
+df.drop(['metrics'], axis=1, inplace=True)
+
+latex_table = df.to_latex()
+
+with open(os.path.join(Config.LOG_DIR, f"fudan/best_results.txt"), "w") as f:
+    f.write(latex_table)
+
+
+
 
 
