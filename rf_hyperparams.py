@@ -1,21 +1,16 @@
+import argparse
 import os
-
+import json
 import pandas as pd
+
 from utils import setup_logging, Config
 from preprocessing import preprocess_data
-from sklearn.model_selection import RepeatedStratifiedKFold
-from sklearn.pipeline import Pipeline
-import csv
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import make_scorer, roc_auc_score, accuracy_score, precision_score, recall_score, f1_score, fbeta_score
-from sklearn.model_selection import GridSearchCV
+
 from datetime import datetime
-import matplotlib.pyplot as plt
+
 from visualization import sensitivity_plot, get_scores
 
-from skopt import BayesSearchCV
-from skopt.space import Integer, Categorical
-from data_loading import load_data, load_tsv_files
+from data_loading import load_tsv_files
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import make_scorer, accuracy_score, precision_score, recall_score, roc_auc_score, f1_score, \
@@ -29,7 +24,9 @@ from sklearn.model_selection import GridSearchCV
 logger = setup_logging("tune_random_forest")
 log_file = "rf" + "_" + datetime.now().strftime("%Y%m%d_%H%M%S")
 
-
+FUDAN = 'fudan'
+HUADONG1 = 'huadong1'
+HUADONG2 = 'huadong2'
 
 file_names = list(("pielou_e_diversity", "simpson_diversity", "phylum_relative", "observed_otus_diversity", "family_relative",
 "class_relative", "fb_ratio", "enterotype", "genus_relative", "species_relative", "shannon_diversity", "domain_relative",
@@ -37,8 +34,8 @@ file_names = list(("pielou_e_diversity", "simpson_diversity", "phylum_relative",
 
 yang_metadata_path = "data/Yang_PRJNA763023/metadata.csv"
 fudan_filepath = 'data/Yang_PRJNA763023/Yang_PRJNA763023_SE/parsed/normalized_results/'
-
-fudan_data = load_tsv_files(fudan_filepath)
+huadong_filepath_1 = 'data/Yang_PRJNA763023/Yang_PRJNA763023_PE_1/parsed/normalized_results'
+huadong_filepath_2 = 'data/Yang_PRJNA763023/Yang_PRJNA763023_PE_2/parsed/normalized_results'
 
 
 
@@ -47,10 +44,10 @@ fudan_data = load_tsv_files(fudan_filepath)
 def grid_search_rf(X_train, X_test, y_train, y_test, file_name):
 
     param_grid = {
-        'n_estimators': [5, 50, 100],# 50, 100, 200],
+        'n_estimators': [5],# 50, 100, 200],
         'max_depth': [None], #, 5, 10, 20],
         'min_samples_split': [2], #, 5, 10],
-        'min_samples_leaf': [1],# 2, 4],
+        'min_samples_leaf': [1, 4],# 2, 4],
         'max_features': ['auto'],# 'sqrt', 'log2']
     }
 
@@ -107,12 +104,12 @@ def grid_search_rf(X_train, X_test, y_train, y_test, file_name):
 
 
 
-def visualize_results(test_scores, file_name):
+def visualize_results(test_scores, data_name, file_name):
     # Create a folder named "plots" if it doesn't exist
-    if not os.path.exists('plots'):
-        os.makedirs('plots')
-    if not os.path.exists('plots/' + str(file_name)):
-        os.makedirs('plots/' + str(file_name))
+    #if not os.path.exists('plots'):
+    #    os.makedirs('plots')
+    #if not os.path.exists('plots/' + data_name + str(file_name)):
+    #    os.makedirs('plots/' + data_name + str(file_name))
 
     scores = get_scores(test_scores)
 
@@ -124,50 +121,88 @@ def visualize_results(test_scores, file_name):
     min_samples_leaf = [param['min_samples_leaf'] for param in param_values]
     max_features = [param['max_features'] for param in param_values]
 
-    sensitivity_plot(n_estimators, scores, file_name, "n_estimators")
-    sensitivity_plot(max_depth, scores, file_name, "max_depth")
-    sensitivity_plot(min_samples_split, scores, file_name, "min_samples_split")
-    sensitivity_plot(min_samples_leaf, scores, file_name, "min_samples_leaf")
-    sensitivity_plot(max_features, scores, file_name, "max_features")
+    sensitivity_plot(n_estimators, scores, data_name, file_name, "n_estimators")
+    sensitivity_plot(max_depth, scores, data_name, file_name, "max_depth")
+    sensitivity_plot(min_samples_split, scores, data_name, file_name, "min_samples_split")
+    sensitivity_plot(min_samples_leaf, scores, data_name, file_name, "min_samples_leaf")
+    sensitivity_plot(max_features, scores, data_name, file_name, "max_features")
 
     # Plot the relationship between accuracy and n_estimators
 
     #plt.savefig('images/' + file_name)
 
+def run_rf_tuning(data_name, filepath):
+    dict = {'bootstrap': True, 'ccp_alpha': 0.0, 'class_weight': None, 'criterion': 'gini'}
 
-full_results = []
-for key in fudan_data:
-    X_train, X_test, y_train, y_test = preprocess_data(fudan_data[key], yang_metadata_path)
-    scores, best_results, best_estimator = grid_search_rf(X_train, X_test, y_train, y_test, file_name=key)
-    full_results.append([str(key),best_estimator, best_results])
-    visualize_results(scores, key)
-    print(full_results)
+    full_results = []
+    data = load_tsv_files(filepath)
+    for key in data:
+        X_train, X_test, y_train, y_test = preprocess_data(data[key], yang_metadata_path) #preprocess_fudan_data?
+        scores, best_results, best_estimator = grid_search_rf(X_train, X_test, y_train, y_test, file_name=key)
+        full_results.append([str(key),best_estimator, best_results])
+        visualize_results(scores, data_name, key)
+        print(full_results)
 
 
-d = {'Diversity': [], 'best parameters': [], 'metrics': []}
-for i in full_results:
-    d['Diversity'].append(i[0])
-    d['best parameters'].append(i[1])
-    d['metrics'].append(i[2])
+    d = {'Normalization': [], 'best parameters': [], 'metrics': []}
+    for i in full_results:
+        d['Normalization'].append(i[0])
+        d['best parameters'].append(i[1])
+        d['metrics'].append(i[2])
 
-df = pd.DataFrame(d)
-df.set_index(['Diversity'], inplace=True)
+    df = pd.DataFrame(d)
+    df.set_index(['Normalization'], inplace=True)
 
-# split 'metrics' column into separate columns
-df_metrics = pd.json_normalize(df['metrics'])
+    df_new = pd.DataFrame(json.loads(df['best_parameters'].values[0]))
+    df = pd.concat([df.drop(columns=['best_parameters']), df_new], axis=1)
 
-# join the new DataFrame with the original one
-df = df.join(df_metrics)
-
-# drop the 'metrics' column
-df.drop(['metrics'], axis=1, inplace=True)
-
-latex_table = df.to_latex()
-
-with open(os.path.join(Config.LOG_DIR, f"fudan/best_results.txt"), "w") as f:
-    f.write(latex_table)
+    df_new = pd.DataFrame(json.loads(df['metrics'].values[0]))
+    df = pd.concat([df.drop(columns=['metrics']), df_new], axis=1)
 
 
 
+    # split 'metrics' column into separate columns
+    #df_metrics = pd.json_normalize(df['metrics'])
+
+    # join the new DataFrame with the original one
+    #df = df.join(df_metrics)
+
+    # drop the 'metrics' column
+    #df.drop(['metrics'], axis=1, inplace=True)
+
+    latex_table = df.to_latex()
+
+    with open(os.path.join(Config.LOG_DIR, data_name, f"best_results.txt"), "w") as f:
+        f.write(latex_table)
+    print("End of file 1")
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--data_name', type=str, default=FUDAN)  # attack type
+    parser.add_argument('--filepath', type=str, default=fudan_filepath)     # number of LSB set to secrets
+    #parser.add_argument('--n', type=int, default=100)      # number of data points to be encoded in LSB
+    #parser.add_argument('--cr', type=float, default=1.0)    # malicious term ratio
+    #parser.add_argument('--p', type=float, default=1.0)     # proportion of malicious data to training data
+    #parser.add_argument('--model', type=int, default=1)     # number of blocks in resnet
+    #parser.add_argument('--lsb_def_bits', type=int, default=1)  # number of replaced bits by defense
+    #parser.add_argument('--gzip_incl', type=bool, default=False) #including gzipping in image compression/decompression
+
+    args = parser.parse_args()
+    data_name = args.data_name
+    if data_name == FUDAN:
+        run_rf_tuning(data_name=args.data_name, filepath=args.filepath)
+    elif data_name == HUADONG1:
+        run_rf_tuning(data_name=args.data_name, filepath=args.filepath)
+    #    test_cor_reconstruction(cr=args.cr, res_n=args.model)
+    #elif attack == SGN:
+    #    test_sgn_reconstruction(cr=args.cr, res_n=args.model)
+    #elif attack == LSB:
+        #test_lsb_acc(bits=args.bits, n_data=args.n, res_n=args.model, gzip_incl=args.gzip_incl)
+        #test_lsb_reconstruction(bits=args.bits, n_data=args.n, res_n=args.model, gzip_incl=args.gzip_incl)
+        #test_lsb_defense_acc(bits=args.bits, lsb_def_bits=args.lsb_def_bits, n_data=args.n, res_n=args.model, gzip_incl=args.gzip_incl)
+        #test_lsb_defense_effectiveness(bits=args.bits, lsb_def_bits = args.lsb_def_bits, n_data=args.n, res_n=args.model, gzip_incl=args.gzip_incl)
+    else:
+        raise ValueError()
 
 

@@ -19,7 +19,7 @@ def get_scores(test_scores):
     scores.append(f2_values)
     return scores
 
-def sensitivity_plot(hyperparam, scores, file_name, xlabel):
+def sensitivity_plot(hyperparam, scores, data_name, file_name, hyperparam_string):
     accuracy_values = scores[0]
     precision_values = scores[1]
     recall_values = scores[2]
@@ -27,6 +27,8 @@ def sensitivity_plot(hyperparam, scores, file_name, xlabel):
     f1_values = scores[4]
     f2_values = scores[5]
 
+    if not os.path.exists(str(Config.PLOTS_DIR) + "/" + str(data_name) + "/" + str(file_name)):
+        os.makedirs(os.path.join(Config.PLOTS_DIR, data_name, file_name))
 
     plt.plot(hyperparam, accuracy_values, label='Accuracy')
     plt.plot(hyperparam, precision_values, label='Precision')
@@ -34,9 +36,9 @@ def sensitivity_plot(hyperparam, scores, file_name, xlabel):
     plt.plot(hyperparam, roc_auc_values, label='ROC AUC Score')
     plt.plot(hyperparam, f1_values, label='F1 Score')
     plt.plot(hyperparam, f2_values, label='F2 Score')
-    plt.xlabel(xlabel)
+    plt.xlabel(hyperparam_string)
     plt.ylabel('Score')
     plt.legend()
     plt.title(file_name)
-    plt.savefig(os.path.join(Config.PLOTS_DIR, file_name, f"rf_n_estimators_sensitivity.png"))
+    plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, file_name, f"{hyperparam_string}_rf_sensitivity.png"))
     plt.show()
