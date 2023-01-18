@@ -46,8 +46,8 @@ def grid_search_rf(X_train, X_test, y_train, y_test, file_name):
     param_grid = {
         'n_estimators': [5],# 50, 100, 200],
         'max_depth': [None], #, 5, 10, 20],
-        'min_samples_split': [2], #, 5, 10],
-        'min_samples_leaf': [1, 4],# 2, 4],
+        'min_samples_split': [2, 4], #, 5, 10],
+        'min_samples_leaf': [4],# 2, 4],
         'max_features': ['auto'],# 'sqrt', 'log2']
     }
 
@@ -61,7 +61,7 @@ def grid_search_rf(X_train, X_test, y_train, y_test, file_name):
 
     # Perform the grid search
     grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=10, scoring=scoring, refit='recall',
-                               return_train_score=True)
+                               return_train_score=True, n_jobs=6)
     grid_search.fit(X_train, y_train)
 
     # Get the best estimator
@@ -132,7 +132,20 @@ def visualize_results(test_scores, data_name, file_name):
     #plt.savefig('images/' + file_name)
 
 def run_rf_tuning(data_name, filepath):
-    dict = {'bootstrap': True, 'ccp_alpha': 0.0, 'class_weight': None, 'criterion': 'gini'}
+    mylist = [['pielou', {'bootstrap': True, 'ccp_alpha': 0.0, 'class_weight': None, 'criterion': 'gini'}, {'accuracy':77, 'precision':80}], ['genus', {'bootstrap': True, 'ccp_alpha': 0.5, 'class_weight': 2, 'criterion': 'gini'}, {'accuracy':74, 'precision':69}]]
+    results_table = pd.DataFrame()
+    df = pd.DataFrame(columns=['Normalization'])
+    for i in mylist:
+        # Create a dataframe with 'Normalization' as the first column
+        df.loc[0] = i[0]
+        # Iterate through the rest of the list and add the key-value pairs as columns and rows
+        for d in i[1:]:
+            for key, value in d.items():
+                if key not in df.columns:
+                    df[key] = None
+                df.loc[0, key] = value
+        results_table = results_table.append(df)
+
 
     full_results = []
     data = load_tsv_files(filepath)
@@ -143,21 +156,19 @@ def run_rf_tuning(data_name, filepath):
         visualize_results(scores, data_name, key)
         print(full_results)
 
-
-    d = {'Normalization': [], 'best parameters': [], 'metrics': []}
+    results_table = pd.DataFrame()
+    df = pd.DataFrame(columns=['Normalization'])
     for i in full_results:
-        d['Normalization'].append(i[0])
-        d['best parameters'].append(i[1])
-        d['metrics'].append(i[2])
-
-    df = pd.DataFrame(d)
-    df.set_index(['Normalization'], inplace=True)
-
-    df_new = pd.DataFrame(json.loads(df['best_parameters'].values[0]))
-    df = pd.concat([df.drop(columns=['best_parameters']), df_new], axis=1)
-
-    df_new = pd.DataFrame(json.loads(df['metrics'].values[0]))
-    df = pd.concat([df.drop(columns=['metrics']), df_new], axis=1)
+        # Create a dataframe with 'Normalization' as the first column
+        df.loc[0] = i[0]
+        # Iterate through the rest of the list and add the key-value pairs as columns and rows
+        for d in i[1:]:
+            for key, value in d.items():
+                if key not in df.columns:
+                    df[key] = None
+                df.loc[0, key] = value
+        results_table = results_table.append(df)
+        results_table.drop(['oob_score', 'min_weight_fraction_leaf', 'bootstrap', 'ccp_alpha'], inplace=True, axis=1)
 
 
 
@@ -170,7 +181,7 @@ def run_rf_tuning(data_name, filepath):
     # drop the 'metrics' column
     #df.drop(['metrics'], axis=1, inplace=True)
 
-    latex_table = df.to_latex()
+    latex_table = results_table.to_latex()
 
     with open(os.path.join(Config.LOG_DIR, data_name, f"best_results.txt"), "w") as f:
         f.write(latex_table)
