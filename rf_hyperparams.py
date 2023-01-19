@@ -1,14 +1,14 @@
 import argparse
 import os
-import json
 import pandas as pd
+import numpy as np
 
 from utils import setup_logging, Config
 from preprocessing import preprocess_data
 
 from datetime import datetime
 
-from visualization import sensitivity_plot, get_scores
+from visualization import sensitivity_plot, get_scores, heatmap_plot
 
 from data_loading import load_tsv_files
 
@@ -44,11 +44,12 @@ huadong_filepath_2 = 'data/Yang_PRJNA763023/Yang_PRJNA763023_PE_2/parsed/normali
 def grid_search_rf(X_train, X_test, y_train, y_test, file_name):
 
     param_grid = {
-        'n_estimators': [5],# 50, 100, 200],
-        'max_depth': [None], #, 5, 10, 20],
+        'n_estimators': [5, 10],# 50, 100, 200],
+        'max_depth': [None, 5], #, 5, 10, 20],
         'min_samples_split': [2, 4], #, 5, 10],
-        'min_samples_leaf': [4],# 2, 4],
+        'min_samples_leaf': [1, 4],# 2, 4],
         'max_features': ['auto'],# 'sqrt', 'log2']
+        'random_state': [1234]
     }
 
     # Define the scoring methods
@@ -105,11 +106,6 @@ def grid_search_rf(X_train, X_test, y_train, y_test, file_name):
 
 
 def visualize_results(test_scores, data_name, file_name):
-    # Create a folder named "plots" if it doesn't exist
-    #if not os.path.exists('plots'):
-    #    os.makedirs('plots')
-    #if not os.path.exists('plots/' + data_name + str(file_name)):
-    #    os.makedirs('plots/' + data_name + str(file_name))
 
     scores = get_scores(test_scores)
 
@@ -121,32 +117,31 @@ def visualize_results(test_scores, data_name, file_name):
     min_samples_leaf = [param['min_samples_leaf'] for param in param_values]
     max_features = [param['max_features'] for param in param_values]
 
-    sensitivity_plot(n_estimators, scores, data_name, file_name, "n_estimators")
-    sensitivity_plot(max_depth, scores, data_name, file_name, "max_depth")
-    sensitivity_plot(min_samples_split, scores, data_name, file_name, "min_samples_split")
-    sensitivity_plot(min_samples_leaf, scores, data_name, file_name, "min_samples_leaf")
-    sensitivity_plot(max_features, scores, data_name, file_name, "max_features")
+    xlabels  = []
+    for i in param_values:
+        p = ""
+        for key, value in i.items():
+            p += f"{key}: {value}\n"
+        xlabels += [p]
+
+    #xlabels = [xlabels[str(i)] for i in xlabels]
+
+
+
+    param1_grid, param2_grid, param3_grid = np.meshgrid(n_estimators, min_samples_split, min_samples_leaf)
+    #heatmap_plot(n_estimators, max_depth, scores, data_name, file_name)
+    sensitivity_plot(xlabels, scores, data_name, file_name, "gridsearch")
+    #sensitivity_plot(n_estimators, scores, data_name, file_name, "n_estimators")
+    #sensitivity_plot(max_depth, scores, data_name, file_name, "max_depth")
+    #sensitivity_plot(min_samples_split, scores, data_name, file_name, "min_samples_split")
+    #sensitivity_plot(min_samples_leaf, scores, data_name, file_name, "min_samples_leaf")
+    #sensitivity_plot(max_features, scores, data_name, file_name, "max_features")
 
     # Plot the relationship between accuracy and n_estimators
 
     #plt.savefig('images/' + file_name)
 
 def run_rf_tuning(data_name, filepath):
-    mylist = [['pielou', {'bootstrap': True, 'ccp_alpha': 0.0, 'class_weight': None, 'criterion': 'gini'}, {'accuracy':77, 'precision':80}], ['genus', {'bootstrap': True, 'ccp_alpha': 0.5, 'class_weight': 2, 'criterion': 'gini'}, {'accuracy':74, 'precision':69}]]
-    results_table = pd.DataFrame()
-    df = pd.DataFrame(columns=['Normalization'])
-    for i in mylist:
-        # Create a dataframe with 'Normalization' as the first column
-        df.loc[0] = i[0]
-        # Iterate through the rest of the list and add the key-value pairs as columns and rows
-        for d in i[1:]:
-            for key, value in d.items():
-                if key not in df.columns:
-                    df[key] = None
-                df.loc[0, key] = value
-        results_table = results_table.append(df)
-
-
     full_results = []
     data = load_tsv_files(filepath)
     for key in data:
@@ -171,33 +166,16 @@ def run_rf_tuning(data_name, filepath):
         results_table.drop(['oob_score', 'min_weight_fraction_leaf', 'bootstrap', 'ccp_alpha'], inplace=True, axis=1)
 
 
-
-    # split 'metrics' column into separate columns
-    #df_metrics = pd.json_normalize(df['metrics'])
-
-    # join the new DataFrame with the original one
-    #df = df.join(df_metrics)
-
-    # drop the 'metrics' column
-    #df.drop(['metrics'], axis=1, inplace=True)
-
     latex_table = results_table.to_latex()
 
     with open(os.path.join(Config.LOG_DIR, data_name, f"best_results.txt"), "w") as f:
         f.write(latex_table)
-    print("End of file 1")
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data_name', type=str, default=FUDAN)  # attack type
-    parser.add_argument('--filepath', type=str, default=fudan_filepath)     # number of LSB set to secrets
-    #parser.add_argument('--n', type=int, default=100)      # number of data points to be encoded in LSB
-    #parser.add_argument('--cr', type=float, default=1.0)    # malicious term ratio
-    #parser.add_argument('--p', type=float, default=1.0)     # proportion of malicious data to training data
-    #parser.add_argument('--model', type=int, default=1)     # number of blocks in resnet
-    #parser.add_argument('--lsb_def_bits', type=int, default=1)  # number of replaced bits by defense
-    #parser.add_argument('--gzip_incl', type=bool, default=False) #including gzipping in image compression/decompression
+    parser.add_argument('--data_name', type=str, default=HUADONG1)
+    parser.add_argument('--filepath', type=str, default=huadong_filepath_1)
 
     args = parser.parse_args()
     data_name = args.data_name
@@ -205,14 +183,6 @@ if __name__ == '__main__':
         run_rf_tuning(data_name=args.data_name, filepath=args.filepath)
     elif data_name == HUADONG1:
         run_rf_tuning(data_name=args.data_name, filepath=args.filepath)
-    #    test_cor_reconstruction(cr=args.cr, res_n=args.model)
-    #elif attack == SGN:
-    #    test_sgn_reconstruction(cr=args.cr, res_n=args.model)
-    #elif attack == LSB:
-        #test_lsb_acc(bits=args.bits, n_data=args.n, res_n=args.model, gzip_incl=args.gzip_incl)
-        #test_lsb_reconstruction(bits=args.bits, n_data=args.n, res_n=args.model, gzip_incl=args.gzip_incl)
-        #test_lsb_defense_acc(bits=args.bits, lsb_def_bits=args.lsb_def_bits, n_data=args.n, res_n=args.model, gzip_incl=args.gzip_incl)
-        #test_lsb_defense_effectiveness(bits=args.bits, lsb_def_bits = args.lsb_def_bits, n_data=args.n, res_n=args.model, gzip_incl=args.gzip_incl)
     else:
         raise ValueError()
 
