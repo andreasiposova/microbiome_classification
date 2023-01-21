@@ -124,7 +124,7 @@ def sensitivity_analysis(filepath, data_name):
             plt.ylabel("score")
             plt.legend()
             plt.tight_layout()
-            plt.savefig(os.path.join(os.path.join(Config.PLOTS_DIR, data_name, key, f"{param}_rf_sensitivity.png")))
+            plt.savefig(os.path.join(os.path.join(Config.PLOTS_DIR, data_name, key, f"/sensitivity/{param}_rf_sensitivity.png")))
             plt.show()
 
 #sensitivity_analysis(fudan_filepath, FUDAN)

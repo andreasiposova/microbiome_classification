@@ -141,7 +141,7 @@ def run_rf_tuning(data_name, filepath):
                     df[k] = None
                 df.loc[0, k] = value
         results_table = results_table.append(df)
-        results_table.drop(['oob_score', 'min_weight_fraction_leaf', 'bootstrap', 'ccp_alpha'], inplace=True, axis=1)
+        results_table.drop(['oob_score', 'min_weight_fraction_leaf', 'bootstrap', 'ccp_alpha', 'class_weight', 'min_impurity_decrease', 'min_impurity_split'], inplace=True, axis=1)
 
 
     latex_table = results_table.to_latex()
