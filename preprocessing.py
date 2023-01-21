@@ -32,9 +32,14 @@ def preprocess_data(dataset, metadata_path):#file_name, metadata_path):
     X_test, y_test = drop_inf_vals(X_test, y_test)
 
     #labelEncoder
-    le = preprocessing.LabelEncoder()
-    le.fit(y_train)
-    y_train = le.transform(y_train)
-    y_test = le.transform(y_test)
+    #le = preprocessing.LabelEncoder()
+    #le.fit(['healthy', 'CRC'])
+    #le.classes = np.array(['healthy','CRC'])
+    #y_train = le.transform(y_train)
+    #y_test = le.transform(y_test)
+
+    label_mapping = {'healthy': 0, 'CRC': 1}
+    y_train = [label_mapping[label] for label in y_train]
+    y_test = [label_mapping[label] for label in y_test]
 
     return X_train, X_test, y_train, y_test
