@@ -20,8 +20,8 @@ from sklearn.model_selection import GridSearchCV
 #logfile = setup_logging("tune_random_forest") # logger
 
 # Set up logging
-logger = setup_logging("tune_random_forest")
-log_file = "rf" + "_" + datetime.now().strftime("%Y%m%d_%H%M%S")
+#logger = setup_logging("tune_random_forest")
+#log_file = "rf" + "_" + datetime.now().strftime("%Y%m%d_%H%M%S")
 
 FUDAN = 'fudan'
 HUADONG1 = 'huadong1'
@@ -43,7 +43,7 @@ huadong_filepath_2 = 'data/Yang_PRJNA763023/Yang_PRJNA763023_PE_2/parsed/normali
 def grid_search_rf(X_train, X_test, y_train, y_test, file_name):
 
     param_grid = {
-        'n_estimators': [1, 5],# 50, 100, 200],
+        'n_estimators': [2],# 50, 100, 200],
         'max_depth': [5, 20], #, 5, 10, 20],
         'min_samples_split': [2, 4], #, 5, 10],
         'min_samples_leaf': [1, 4],# 2, 4],
@@ -146,8 +146,8 @@ def run_rf_tuning(data_name, filepath):
 
     latex_table = results_table.to_latex()
 
-    if not os.path.exists(str(Config.PLOTS_DIR) + "/" + str(data_name)):
-        os.makedirs(os.path.join(Config.PLOTS_DIR, data_name))
+    if not os.path.exists(str(Config.LOG_DIR) + "/" + str(data_name)):
+        os.makedirs(os.path.join(Config.LOG_DIR, data_name))
 
     with open(os.path.join(Config.LOG_DIR, data_name, f"best_results.txt"), "w") as f:
         f.write(latex_table)
