@@ -42,23 +42,23 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, file_name):
 
     param_grid = {
         'n_estimators': np.linspace(20, 800, 50, dtype=int),
-        'max_depth': np.linspace(2, 40, 3, dtype=int),
-        'min_samples_split': np.linspace(2, 50, 3, dtype=int),
-        'min_samples_leaf': np.linspace(2, 50, 3, dtype=int),
-        'max_features': ['auto', 'sqrt', 'log2'], # 'sqrt', 'log2']
+        'max_depth': np.linspace(2, 60, 3, dtype=int),
+        'min_samples_split': np.linspace(2, 60, 3, dtype=int),
+        'min_samples_leaf': np.linspace(2, 60, 3, dtype=int),
+        'max_features': ['auto', 'sqrt', 'log2'], # 'sqrt', 'log2'],
         'random_state': [1234]
     }
 
     # Define the scoring methods
     scoring = {
-        'recall': make_scorer(recall_score),
+        'roc_auc': make_scorer(roc_auc_score),
     }
 
     # Instantiate the classifier
     rf = RandomForestClassifier()
 
     # Perform the grid search
-    grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=10, scoring=scoring, refit='recall',
+    grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=10, scoring=scoring, refit='roc_auc',
                                return_train_score=True, n_jobs=-1)
     print(f"fitting GridSearch on {file_name}")
     grid_search.fit(X_train, y_train)
