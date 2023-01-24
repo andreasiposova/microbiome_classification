@@ -41,24 +41,24 @@ huadong_filepath_2 = 'data/Yang_PRJNA763023/Yang_PRJNA763023_PE_2/parsed/normali
 def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, file_name):
 
     param_grid = {
-        'n_estimators': np.linspace(20, 800, 50, dtype=int),
-        'max_depth': np.linspace(2, 60, 3, dtype=int),
-        'min_samples_split': np.linspace(2, 60, 3, dtype=int),
-        'min_samples_leaf': np.linspace(2, 60, 3, dtype=int),
+        'n_estimators': np.linspace(10, 800, 10, dtype=int),
+        'max_depth': np.linspace(2, 60, 2, dtype=int),
+        'min_samples_split': np.linspace(2, 60, 2, dtype=int),
+        'min_samples_leaf': np.linspace(2, 60, 2, dtype=int),
         'max_features': ['auto', 'sqrt', 'log2'], # 'sqrt', 'log2'],
         'random_state': [1234]
     }
 
     # Define the scoring methods
     scoring = {
-        'roc_auc': make_scorer(roc_auc_score),
+        'accuracy': make_scorer(accuracy_score),
     }
 
     # Instantiate the classifier
     rf = RandomForestClassifier()
 
     # Perform the grid search
-    grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=10, scoring=scoring, refit='roc_auc',
+    grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=10, scoring=scoring, refit='accuracy',
                                return_train_score=True, n_jobs=-1)
     print(f"fitting GridSearch on {file_name}")
     grid_search.fit(X_train, y_train)
@@ -147,8 +147,8 @@ def visualize_results(test_scores, data_name, file_name, y_test, y_pred, y_val, 
     sensitivity_plot(max_features_mean_metrics, data_name, file_name)
     sensitivity_plot(min_samples_split_mean_metrics, data_name, file_name)
     sensitivity_plot(min_samples_leaf_mean_metrics, data_name, file_name)
-    cm_plot(y_test, y_pred, data_name, file_name)
-    cm_plot(y_val, y_pred_val, data_name, file_name)
+    cm_plot(y_test, y_pred, data_name, file_name, "test")
+    cm_plot(y_val, y_pred_val, data_name, file_name, "val")
 
 def create_results_table(full_results):
     df = pd.DataFrame(columns=['Normalization'])

@@ -11,7 +11,7 @@ def drop_inf_vals(X, y):
         # replace inf and -inf in column with max value of column
         X[col].replace([np.inf, -np.inf], max_value_train, inplace=True)
         # drop the inf values from the test set
-        X = X.replace([np.inf, -np.inf], np.nan).dropna()
+        #X = X.replace([np.inf, -np.inf], np.nan).dropna()
     # get the respective y when we drop observations from the test set
     y = y[y.index.isin(X.index)]
     return X, y

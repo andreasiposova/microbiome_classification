@@ -119,7 +119,7 @@ def sensitivity_plot(hp_mean_metrics, data_name, file_name):
     #plt.show()
 
 
-def cm_plot(y_test, y_pred, data_name, file_name):
+def cm_plot(y_test, y_pred, data_name, file_name, test_or_val):
     if not os.path.exists(str(Config.PLOTS_DIR) + "/" + str(data_name) + "/" + str(file_name)):
         os.makedirs(os.path.join(Config.PLOTS_DIR, data_name, file_name))
 
@@ -133,5 +133,5 @@ def cm_plot(y_test, y_pred, data_name, file_name):
     disp = ConfusionMatrixDisplay(cm, display_labels=labels)
     disp.plot()
     plt.title(file_name)
-    plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, file_name, f"rf_best_estimator_cm.png"))
+    plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, file_name, f"rf_best_estimator_{test_or_val}_cm.png"))
     #plt.show()
