@@ -45,3 +45,9 @@ def load_metadata(filepath):
     data = pd.read_csv(filepath, sep=",", usecols=["Run", "disease_stat"])
     data.set_index('Run', inplace=True)
     return data
+
+def load_young_old_labels(filepath):
+    labels = pd.read_csv(filepath, sep=",|_") #|
+    labels = labels[['Lon', 'Run']]
+    labels.set_index('Run', inplace=True)
+    return labels
