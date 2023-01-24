@@ -41,7 +41,7 @@ huadong_filepath_2 = 'data/Yang_PRJNA763023/Yang_PRJNA763023_PE_2/parsed/normali
 def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, file_name):
 
     param_grid = {
-        'n_estimators': np.linspace(10, 800, 10, dtype=int),
+        'n_estimators': np.linspace(10, 800, 5, dtype=int),
         'max_depth': np.linspace(2, 60, 2, dtype=int),
         'min_samples_split': np.linspace(2, 60, 2, dtype=int),
         'min_samples_leaf': np.linspace(2, 60, 2, dtype=int),
