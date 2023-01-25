@@ -212,8 +212,15 @@ def run_rf_tuning(data_name, filepath, h1_filepath, h2_filepath):
             X_val = X_val[common_cols_v]
             X_train = X_train[common_cols_t]
             X_test = X_test[common_cols_t]
+            X_test
 
             top_features = calculate_feature_importance(X_train, y_train)
+            top_features_names = list(map(lambda x: x[0], top_features))
+            X_train = X_train[top_features_names]
+            common_cols_f = set(X_test.columns).intersection(X_train.columns)
+            common_cols_fv = set(X_val.columns).intersection(X_train.columns)
+            X_test = X_test[common_cols_f]
+            X_val = X_val[common_cols_fv]
 
 
             scores, val_scores, best_results_on_train, best_estimator, best_results_on_val, best_params_on_test, y_test, y_pred, y_val_pred = grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, file_name=key)
