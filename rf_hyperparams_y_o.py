@@ -197,56 +197,63 @@ def run_rf_tuning(data_name, filepath, h1_filepath, h2_filepath):
     huadong_data1 = load_tsv_files(huadong_filepath_1)
     huadong_data2 = load_tsv_files(huadong_filepath_2)
 
+    X_train = pd.DataFrame()
+    X_test = pd.DataFrame()
+    X_val = pd.DataFrame()
     for key in data:
-        if key == 'genus_relative':
-            #X_train, X_test, y_train, y_test = preprocess_data(data[key], yang_metadata_path) #preprocess_fudan_data?
-            X_train, X_test, y_train, y_test = preprocess_with_y_o_labels(data[key], yang_metadata_path, young_old_labels_path, 'old')
-            X_h1, y_h1 = preprocess_huadong_with_y_o_labels(huadong_data1[key], yang_metadata_path, young_old_labels_path, 'old')
-            X_h2, y_h2 = preprocess_huadong_with_y_o_labels(huadong_data2[key], yang_metadata_path, young_old_labels_path, 'old')
-            #= preprocess_huadong(huadong_data1[key], yang_metadata_path)
-            #X_h2, y_h2 = preprocess_huadong(huadong_data2[key], yang_metadata_path)
-            X_val = pd.concat([X_h1, X_h2])
-            y_val = y_h1 + y_h2
-            common_cols_t = set(X_test.columns).intersection(X_val.columns)
-            common_cols_v = set(X_val.columns).intersection(X_test.columns)
+        #X_train, X_test, y_train, y_test = preprocess_data(data[key], yang_metadata_path) #preprocess_fudan_data?
+        X_train_1, X_test_1, y_train, y_test = preprocess_with_y_o_labels(data[key], yang_metadata_path, young_old_labels_path, 'old')
+        X_h1, y_h1 = preprocess_huadong_with_y_o_labels(huadong_data1[key], yang_metadata_path, young_old_labels_path, 'old')
+        X_h2, y_h2 = preprocess_huadong_with_y_o_labels(huadong_data2[key], yang_metadata_path, young_old_labels_path, 'old')
+        #= preprocess_huadong(huadong_data1[key], yang_metadata_path)
+        #X_h2, y_h2 = preprocess_huadong(huadong_data2[key], yang_metadata_path)
+        X_val1 = pd.concat([X_h1, X_h2])
+        y_val = y_h1 + y_h2
 
-            #filling missing values in huadong cohort with zeros
-            #as two files are concatenated for huadong cohort files
-            #they contain columns that are not compatible
-            #thus creating missing values - they are replaced with 0 as it means the abundace of that bacteria is anyway 0
-            X_val = X_val.fillna(0)
-            X_val = X_val[common_cols_v]
-            X_train = X_train[common_cols_t]
-            X_test = X_test[common_cols_t]
-            X_train = X_train.append(X_test)
-            y_train = y_train + y_test
+        X_train = X_train.append(X_train_1)
+        X_test = X_test.append(X_test_1)
+        X_val = X_val.append(X_val1)
 
-            #top_features = calculate_feature_importance(X_train, y_train)
-            #top_features_names = list(map(lambda x: x[0], top_features))
-            #X_train = X_train[top_features_names]
-            #common_cols_f = set(X_test.columns).intersection(X_train.columns)
-            #common_cols_fv = set(X_val.columns).intersection(X_train.columns)
-            #X_test = X_test[common_cols_f]
-            #X_val = X_val[common_cols_fv]
+    common_cols_t = set(X_test.columns).intersection(X_val.columns)
+    common_cols_v = set(X_val.columns).intersection(X_test.columns)
+
+    #filling missing values in huadong cohort with zeros
+    #as two files are concatenated for huadong cohort files
+    #they contain columns that are not compatible
+    #thus creating missing values - they are replaced with 0 as it means the abundace of that bacteria is anyway 0
+    X_val = X_val.fillna(0)
+    X_val = X_val[common_cols_v]
+    X_train = X_train[common_cols_t]
+    X_test = X_test[common_cols_t]
+    X_train = X_train.append(X_test)
+    y_train = y_train + y_test
+
+    #top_features = calculate_feature_importance(X_train, y_train)
+    #top_features_names = list(map(lambda x: x[0], top_features))
+    #X_train = X_train[top_features_names]
+    #common_cols_f = set(X_test.columns).intersection(X_train.columns)
+    #common_cols_fv = set(X_val.columns).intersection(X_train.columns)
+    #X_test = X_test[common_cols_f]
+    #X_val = X_val[common_cols_fv]
 
 
-            scores, val_scores, best_results_on_train, best_estimator, best_results_on_val, best_params_on_test, y_test, y_pred, y_val_pred = grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, file_name=key)
-            full_results_test.append([str(key),best_estimator, best_results_on_train])
-            full_results_val.append([str(key),best_params_on_test, best_results_on_val])
-            visualize_results(scores, data_name, key, y_test, y_pred, y_val, y_val_pred)
+    scores, val_scores, best_results_on_train, best_estimator, best_results_on_val, best_params_on_test, y_test, y_pred, y_val_pred = grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, file_name=key)
+    full_results_test.append([str(key),best_estimator, best_results_on_train])
+    full_results_val.append([str(key),best_params_on_test, best_results_on_val])
+    visualize_results(scores, data_name, key, y_test, y_pred, y_val, y_val_pred)
 
-            best_results_test = create_results_table(full_results_test)
-            best_results_val = create_results_table(full_results_val)
-            untuned_params = ['oob_score', 'min_weight_fraction_leaf', 'bootstrap',
-                                'ccp_alpha', 'class_weight', 'min_impurity_decrease',
-                                'min_impurity_split', 'max_leaf_nodes', 'max_samples',
-                                'verbose', 'warm_start']
-            results_test_table = results_test_table.append(best_results_test)
-            results_val_table = results_test_table.append(best_results_val)
-            results_test_table.drop(untuned_params, inplace=True, axis=1)
-            results_val_table.drop(untuned_params, inplace=True, axis=1)
-            save_result_table(results_test_table, data_name, table_name="best_results_test")
-            save_result_table(results_val_table, data_name, table_name="best_results_val")
+    best_results_test = create_results_table(full_results_test)
+    best_results_val = create_results_table(full_results_val)
+    untuned_params = ['oob_score', 'min_weight_fraction_leaf', 'bootstrap',
+                        'ccp_alpha', 'class_weight', 'min_impurity_decrease',
+                        'min_impurity_split', 'max_leaf_nodes', 'max_samples',
+                        'verbose', 'warm_start']
+    results_test_table = results_test_table.append(best_results_test)
+    results_val_table = results_test_table.append(best_results_val)
+    results_test_table.drop(untuned_params, inplace=True, axis=1)
+    results_val_table.drop(untuned_params, inplace=True, axis=1)
+    save_result_table(results_test_table, data_name, table_name="best_results_test")
+    save_result_table(results_val_table, data_name, table_name="best_results_val")
 
 
 
