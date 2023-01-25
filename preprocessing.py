@@ -19,7 +19,7 @@ def drop_inf_vals(X, y):
     return X, y
 
 
-def preprocess_data(dataset, metadata_path, y_o_labels):#file_name, metadata_path):
+def preprocess_data(dataset, metadata_path):#file_name, metadata_path):
     #dataset = globals()[file_name]
     #print(file_name)
     #dataset = file_name
@@ -76,7 +76,9 @@ def preprocess_with_y_o_labels(dataset, metadata_path, y_o_labels_filepath, grou
     if group == 'old':
         data = data.loc[(data['Lon'] == 'oControl') | (data['Lon'] == 'Old') | (data['Lon'] == 'oCRC') | (data['Lon'] == 'oCTRL')]
     if group == 'young:':
-        data.loc[(data['Lon'] == 'yControl') & (data['Lon'] == 'Young')]
+        data = data.loc[
+            (data['Lon'] == 'yControl') | (data['Lon'] == 'Young') | (data['Lon'] == 'yCRC') | (data['Lon'] == 'yCTRL')]
+
 
     data.drop(['Lon'], axis=1, inplace=True)
 

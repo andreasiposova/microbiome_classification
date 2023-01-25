@@ -46,7 +46,7 @@ young_old_labels_path = 'data/Yang_PRJNA763023/SraRunTable.csv'
 def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, file_name):
 
     param_grid = {
-        'n_estimators': np.linspace(10, 800, 5, dtype=int),
+        'n_estimators': np.linspace(10, 200, 5, dtype=int),
         'max_depth': np.linspace(2, 60, 2, dtype=int),
         'min_samples_split': np.linspace(2, 60, 2, dtype=int),
         'min_samples_leaf': np.linspace(2, 60, 2, dtype=int),
@@ -56,14 +56,14 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, file_name):
 
     # Define the scoring methods
     scoring = {
-        'accuracy': make_scorer(accuracy_score),
+        'roc_auc': make_scorer(roc_auc_score),
     }
 
     # Instantiate the classifier
     rf = RandomForestClassifier()
 
     # Perform the grid search
-    grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=10, scoring=scoring, refit='accuracy',
+    grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=10, scoring=scoring, refit='roc_auc',
                                return_train_score=True, n_jobs=-1)
     print(f"fitting GridSearch on {file_name}")
     grid_search.fit(X_train, y_train)
@@ -106,9 +106,15 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, file_name):
     val_scores = []
     #apply the best model params (chosen on the test set)
     #predict on the validation set (huadong cohort)
-    rf_best_test = RandomForestClassifier(**max_params)
-    rf_best_test.fit(X_train, y_train)
-    y_val_pred = rf_best_test.predict(X_val)
+    #rf_best_test = RandomForestClassifier(**max_params)
+    #rf_best_test.fit(X_train, y_train)
+    #y_val_pred = rf_best_test.predict(X_val)
+    best_estimator_params_on_train = best_estimator.get_params()
+    rf_best_train = RandomForestClassifier(**best_estimator_params_on_train)
+    # Evaluate the best estimator on X_test and y_test
+    rf_best_train.fit(X_train, y_train)
+    y_val_pred = rf_best_train.predict(X_val)
+
     #compute the metrics on the validation set
     accuracy = accuracy_score(y_val, y_val_pred)
     precision = precision_score(y_val, y_val_pred)
@@ -212,15 +218,16 @@ def run_rf_tuning(data_name, filepath, h1_filepath, h2_filepath):
             X_val = X_val[common_cols_v]
             X_train = X_train[common_cols_t]
             X_test = X_test[common_cols_t]
-            X_test
+            X_train = X_train.append(X_test)
+            y_train = y_train + y_test
 
-            top_features = calculate_feature_importance(X_train, y_train)
-            top_features_names = list(map(lambda x: x[0], top_features))
-            X_train = X_train[top_features_names]
-            common_cols_f = set(X_test.columns).intersection(X_train.columns)
-            common_cols_fv = set(X_val.columns).intersection(X_train.columns)
-            X_test = X_test[common_cols_f]
-            X_val = X_val[common_cols_fv]
+            #top_features = calculate_feature_importance(X_train, y_train)
+            #top_features_names = list(map(lambda x: x[0], top_features))
+            #X_train = X_train[top_features_names]
+            #common_cols_f = set(X_test.columns).intersection(X_train.columns)
+            #common_cols_fv = set(X_val.columns).intersection(X_train.columns)
+            #X_test = X_test[common_cols_f]
+            #X_val = X_val[common_cols_fv]
 
 
             scores, val_scores, best_results_on_train, best_estimator, best_results_on_val, best_params_on_test, y_test, y_pred, y_val_pred = grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, file_name=key)
