@@ -55,8 +55,12 @@ def get_rf_scores_params(test_scores):
         ['min_samples_split', 'accuracy', 'precision', 'roc_auc', 'recall', 'f1', 'f2']].groupby(
         'min_samples_split').mean()
     min_samples_split_mean_metrics.reset_index(inplace=True)
+    class_weight_mean_metrics = params_df[
+        ['class_weight', 'accuracy', 'precision', 'roc_auc', 'recall', 'f1', 'f2']].groupby(
+        'class_weight').mean()
+    class_weight_mean_metrics.reset_index(inplace=True)
 
-    return scores, param_combinations, n_estimators_mean_metrics, max_depth_mean_metrics, max_features_mean_metrics, min_samples_split_mean_metrics, min_samples_leaf_mean_metrics
+    return scores, param_combinations, n_estimators_mean_metrics, max_depth_mean_metrics, max_features_mean_metrics, min_samples_leaf_mean_metrics, min_samples_split_mean_metrics, class_weight_mean_metrics
 
 
 def grid_search_plot(hyperparam, scores, data_name, file_name):
@@ -119,9 +123,9 @@ def sensitivity_plot(hp_mean_metrics, data_name, file_name):
     #plt.show()
 
 
-def cm_plot(y_test, y_pred, data_name, file_name, test_or_val):
-    if not os.path.exists(str(Config.PLOTS_DIR) + "/" + str(data_name) + "/" + str(file_name)):
-        os.makedirs(os.path.join(Config.PLOTS_DIR, data_name, file_name))
+def cm_plot(y_test, y_pred, data_name, group, file_name, test_or_val):
+    if not os.path.exists(str(Config.PLOTS_DIR) + "/" + str(data_name) + "/" + str(file_name) + "/" + group):
+        os.makedirs(os.path.join(Config.PLOTS_DIR, data_name, file_name, group))
 
     label_mapping = {'healthy': 0, 'CRC': 1}
     reverse_mapping = {value: key for key, value in label_mapping.items()}
@@ -133,5 +137,53 @@ def cm_plot(y_test, y_pred, data_name, file_name, test_or_val):
     disp = ConfusionMatrixDisplay(cm, display_labels=labels)
     disp.plot()
     plt.title(file_name)
-    plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, file_name, f"rf_best_estimator_{test_or_val}_cm.png"))
+    plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, file_name, group, f"rf_best_estimator_{test_or_val}_cm.png"))
     #plt.show()
+
+def grid_search_train_test_plot(train_scores, test_scores, data_name, group):
+    # plot the train and test scores
+    if not os.path.exists(str(Config.PLOTS_DIR) + "/" + str(data_name) + "/" + group):
+        os.makedirs(os.path.join(Config.PLOTS_DIR, data_name, group))
+    plt.plot(train_scores, label='train score')
+    plt.plot(test_scores, label='test score')
+    plt.title('GridSearch CV Train vs. Test score')
+    plt.legend()
+    plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, group, f"rf_grid_search_scores.png"))
+
+
+def create_scores_dataframe(grid_clf, param_name, num_results=15, negative=True, graph=True, display_all_params=True):
+    clf = grid_clf.best_estimator_
+    clf_params = grid_clf.best_params_
+    if negative:
+        clf_score = -grid_clf.best_score_
+    else:
+        clf_score = grid_clf.best_score_
+    clf_stdev = grid_clf.cv_results_['std_test_score'][grid_clf.best_index_]
+    cv_results = grid_clf.cv_results_
+
+    # pick out the best results
+    # =========================
+    scores_df = pd.DataFrame(cv_results).sort_values(by='rank_test_score')
+
+
+def plot_hyperparam_sensitivity(param, param_ranges, acc, prec, rec, roc_auc, f1, data_name, group, name):
+    plt.figure(figsize=(7, 5))
+    x_str = [str(value) for value in param_ranges[param]]
+    if "None" in x_str or "True" in x_str or "False" in x_str:
+        x = x_str
+    else:
+        x = param_ranges[param]
+    plt.plot(x, metric, label="Accuracy")
+    plt.plot(x, metric, label="Precision")
+    plt.plot(x, metric, label="Recall")
+    plt.plot(x, roc_auc, label="ROC AUC")
+    plt.plot(x, f1, label="F1")
+    # plt.plot(x, f2, label="F2")
+    plt.xlabel(param)
+    plt.ylabel("score")
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(
+        os.path.join(os.path.join(Config.PLOTS_DIR, data_name, key, f"sensitivity/{param}_rf_sensitivity_test.png")))
+    plt.close()
+

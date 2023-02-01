@@ -51,14 +51,14 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, file_name):
 
     # Define the scoring methods
     scoring = {
-        'accuracy': make_scorer(accuracy_score),
+        'precision': make_scorer(precision_score),
     }
 
     # Instantiate the classifier
     rf = RandomForestClassifier()
 
     # Perform the grid search
-    grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=10, scoring=scoring, refit='accuracy',
+    grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=10, scoring=scoring, refit='precision',
                                return_train_score=True, n_jobs=-1)
     print(f"fitting GridSearch on {file_name}")
     grid_search.fit(X_train, y_train)
