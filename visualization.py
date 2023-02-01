@@ -1,5 +1,6 @@
 from statistics import mean
 import os
+import numpy as np
 import pandas as pd
 
 from utils import Config
@@ -8,6 +9,7 @@ import matplotlib
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix
+import forestci as fci
 
 
 
@@ -166,7 +168,7 @@ def create_scores_dataframe(grid_clf, param_name, num_results=15, negative=True,
     scores_df = pd.DataFrame(cv_results).sort_values(by='rank_test_score')
 
 
-def plot_hyperparam_sensitivity(param, param_ranges, acc, prec, rec, roc_auc, f1, data_name, group, name):
+"""def plot_hyperparam_sensitivity(param, param_ranges, acc, prec, rec, roc_auc, f1, data_name, group, name):
     plt.figure(figsize=(7, 5))
     x_str = [str(value) for value in param_ranges[param]]
     if "None" in x_str or "True" in x_str or "False" in x_str:
@@ -184,6 +186,41 @@ def plot_hyperparam_sensitivity(param, param_ranges, acc, prec, rec, roc_auc, f1
     plt.legend()
     plt.tight_layout()
     plt.savefig(
-        os.path.join(os.path.join(Config.PLOTS_DIR, data_name, key, f"sensitivity/{param}_rf_sensitivity_test.png")))
+        os.path.join(os.path.join(Config.PLOTS_DIR, data_name, f"sensitivity/{param}_rf_sensitivity_test.png")))
+    plt.close()
+"""
+def plot_conf_int(y_true, y_pred, X_train, X_pred, clf, data_name, file_name, group, set_name):
+    if not os.path.exists(str(Config.PLOTS_DIR) + "/" + str(data_name) + "/final_results/" + str(group) + "/" + str(file_name)):
+        os.makedirs(os.path.join(Config.PLOTS_DIR, data_name, "final_results", group, file_name))
+    y_true = np.array(y_true)
+    idx_crc = np.where(y_true == 1)[0]
+    idx_healthy = np.where(y_true == 0)[0]
+
+    fig, ax = plt.subplots(1)
+    ax.hist(y_pred[idx_crc, 1], histtype='step', label='CRC')
+    ax.hist(y_pred[idx_healthy, 1], histtype='step', label='healthy')
+    ax.set_xlabel('Prediction (CRC probability)')
+    ax.set_ylabel('Number of observations')
+    plt.legend()
+    plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, "final_results", group, file_name, f"RF_{set_name}_histogram_CI.png"))
     plt.close()
 
+    # Calculate the variance
+    spam_V_IJ_unbiased = fci.random_forest_error(clf, X_train, X_pred)
+
+    # Plot forest prediction for emails and standard deviation for estimates
+    # Blue points are spam emails; Green points are non-spam emails
+    fig, ax = plt.subplots(1)
+    ax.scatter(y_pred[idx_crc, 1],
+               np.sqrt(spam_V_IJ_unbiased[idx_crc]),
+               label='CRC')
+
+    ax.scatter(y_pred[idx_healthy, 1],
+               np.sqrt(spam_V_IJ_unbiased[idx_healthy]),
+               label='healthy')
+
+    ax.set_xlabel('Prediction (CRC probability)')
+    ax.set_ylabel('Standard deviation')
+    plt.legend()
+    plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, "final_results", group, file_name, f"RF_{set_name}_scatterplot_CI.png"))
+    plt.close()
