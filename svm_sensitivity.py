@@ -21,7 +21,7 @@ from sklearn.pipeline import Pipeline
 
 import matplotlib
 
-from visualization import plot_hyperparam_sensitivity
+
 
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
