@@ -142,6 +142,7 @@ def full_preprocessing_y_o_labels(data, huadong_data1, huadong_data2, key, yang_
 
 def apply_feature_abundance_limits(main_df):
     cla = [-np.inf, 0.00005, 0.0005, 0.005, 0.05, 0.5, np.inf]
+    main_df = pd.DataFrame(main_df)
     main_index = list(main_df.index.values)
     main_columns = list(main_df.columns.values)
     main_df = pd.DataFrame(np.digitize(main_df, cla), index=list(main_index), columns=list(main_columns)).subtract(1)

@@ -56,10 +56,10 @@ young_old_labels_path = 'data/Yang_PRJNA763023/SraRunTable.csv'
 def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, file_name, group):
     if group == "old":
         param_grid = {
-            'n_estimators': np.arange(5, 150, 30, dtype=int),
-            'max_depth': np.arange(2, 30, 10, dtype=int),
-            'min_samples_split': np.arange(2, 30, 10, dtype=int),
-            'min_samples_leaf': np.arange(2, 12, 2, dtype=int),
+            'n_estimators': np.arange(5, 50, 2, dtype=int),
+            'max_depth': np.arange(2, 12, 1, dtype=int),
+            'min_samples_split': np.arange(2, 15, 2, dtype=int),
+            'min_samples_leaf': np.arange(2, 30, 2, dtype=int),
             'max_features': ['sqrt', 'log2'], # 'sqrt', 'log2'],
             #'criteria': ['gini', 'entropy'],
             'random_state': [1234],
@@ -313,11 +313,35 @@ def run_rf_tuning(data_name, filepath, group, select_features = True):
         if key == "genus_relative" or key == "family_relative":
             #X_train, X_test, y_train, y_test = preprocess_data(data[key], yang_metadata_path) #preprocess_fudan_data?
             if group == "all":
+                # get train, test, val sets from the necessary files (ALL samples, both young-onset or old-onset CRC vs healthy samples)
                 X_train_1, X_test_1, y_train, y_test = preprocess_data(data[key], yang_metadata_path)
                 X_h1, y_h1 = preprocess_huadong(huadong_data1[key], yang_metadata_path)
                 X_h2, y_h2 = preprocess_huadong(huadong_data2[key], yang_metadata_path)
             else:
+                #get train, test, val sets from the necessary files and chosen group (young-onset or old-onset CRC vs healthy samples)
                 X_train_1, X_test_1, X_val_1, y_train, y_test, y_val = full_preprocessing_y_o_labels(data, huadong_data1, huadong_data2, key, yang_metadata_path, young_old_labels_path, group)
+            #if we want to use all features, set the file_name
+            if select_features == False:
+                file_name = "all_features"
+                print("All features will be used")
+            #if we want to select features used in the paper, set the file_name and perform feature selection
+            if select_features == True:
+                file_name = "selected_features"
+                print(f"Selecting features...")
+                #feature selection by RF, 10-fold CV, excluding each feature at a time, based on mean decrease accuracy per feature
+                # top_features = calculate_feature_importance(X_train, y_train, group)
+                # top_features_names = list(map(lambda x: x[0], top_features))
+                # print(top_features_names)
+                # X_train = X_train[top_features_names]
+                # X_train.to_csv('data/selected_features_old.csv')
+                # common_cols_f = set(X_test.columns).intersection(X_train.columns)
+                # common_cols_fv = set(X_val.columns).intersection(X_train.columns)
+                # X_test = X_test[common_cols_f]
+                # X_val = X_val[common_cols_fv]
+                #feature selection based on the feature names from the Yang et.al. paper
+                X_test_1 = select_features_from_paper(X_test_1, group, key)
+                X_train_1 = select_features_from_paper(X_train_1, group, key)
+                X_val_1 = select_features_from_paper(X_val_1, group, key)
 
             X_train = pd.concat([X_train, X_train_1], axis=1)
             X_test = pd.concat([X_test, X_test_1], axis=1)
@@ -342,32 +366,13 @@ def run_rf_tuning(data_name, filepath, group, select_features = True):
     print("number of samples in test set: ", len(X_test))
     print("number of samples in validation set: ", len(X_val))
 
+    print(f"Running experiments on {group} samples")
 
-    if select_features == False:
-        file_name = "all_features"
-        print(f"Running experiments on {group} samples, without feature selection")
-
-    if select_features == True:
-        file_name = "selected_features"
-        print(f"Running experiments on {group} samples, with feature selection")
-        #top_features = calculate_feature_importance(X_train, y_train, group)
-        #top_features_names = list(map(lambda x: x[0], top_features))
-        #print(top_features_names)
-        #X_train = X_train[top_features_names]
-        #X_train.to_csv('data/selected_features_old.csv')
-        #common_cols_f = set(X_test.columns).intersection(X_train.columns)
-        #common_cols_fv = set(X_val.columns).intersection(X_train.columns)
-        #X_test = X_test[common_cols_f]
-        #X_val = X_val[common_cols_fv]
-        X_test = select_features_from_paper(X_test, group)
-        X_train = select_features_from_paper(X_train, group)
-        X_val = select_features_from_paper(X_val, group)
-
-    scaler = MinMaxScaler()
-    scaler.fit(X_train)
-    X_train = scaler.transform(X_train)
-    X_test = scaler.transform(X_test)
-    X_val = scaler.transform(X_val)
+    #scaler = MinMaxScaler()
+    #scaler.fit(X_train)
+    #X_train = scaler.transform(X_train)
+    #X_test = scaler.transform(X_test)
+    #X_val = scaler.transform(X_val)
 
     train_scores, scores, val_scores, best_results_train, best_results_test, best_estimator, best_auroc_params, best_results_on_val, y_train_pred, y_pred, y_val_pred = grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, file_name, group)
     if select_features == True:
@@ -385,7 +390,7 @@ def run_rf_tuning(data_name, filepath, group, select_features = True):
 
     if not os.path.exists(str(Config.LOG_DIR) + "/" + str(data_name) + "/" + group + "/" + str(file_name)):
         os.makedirs(os.path.join(Config.LOG_DIR, data_name, group, file_name))
-    with open(os.path.join(Config.LOG_DIR, data_name, group, file_name, f"best_params.txt"), "w") as f:
+    with open(os.path.join(Config.LOG_DIR, data_name, group, file_name, f"RF_best_params.txt"), "w") as f:
         f.write(str(best_auroc_params))
 
     best_results_train = create_results_table(full_results_train)
@@ -400,7 +405,7 @@ def run_rf_tuning(data_name, filepath, group, select_features = True):
     results_val_table = results_val_table.append(best_results_val)
 #   results_test_table.drop(untuned_params, inplace=True, axis=1)
 #   results_val_table.drop(untuned_params, inplace=True, axis=1)
-    save_result_table(results_train_table, results_test_table, results_val_table, data_name, file_name, group, table_name="best_results")
+    save_result_table(results_train_table, results_test_table, results_val_table, data_name, file_name, group, table_name="RF_best_results")
     #save_result_table(results_test_table, data_name, file_name, group, table_name="best_results_test")
     #save_result_table(results_val_table, data_name, file_name, group, table_name="best_results_val")
 

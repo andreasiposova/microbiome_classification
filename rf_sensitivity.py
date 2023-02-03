@@ -20,7 +20,7 @@ from sklearn.pipeline import Pipeline
 
 import matplotlib
 
-from visualization import plot_hyperparam_sensitivity
+#from visualization import plot_hyperparam_sensitivity
 
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
@@ -96,6 +96,24 @@ def sensitivity_analysis(data_name, filepath, group, select_features = False):
             elif group == 'young' or group == 'old':
                 X_train_1, X_test_1, X_val_1, y_train, y_test, y_val = full_preprocessing_y_o_labels(data, huadong_data1, huadong_data2, key, yang_metadata_path, young_old_labels_path, group)
 
+            if select_features == False:
+                file_name = "all_features"
+
+            if select_features == True:
+                file_name = "selected_features"
+                # top_features = calculate_feature_importance(X_train, y_train, group)
+                # top_features_names = list(map(lambda x: x[0], top_features))
+                # print(top_features_names)
+                # X_train = X_train[top_features_names]
+                # X_train.to_csv('data/selected_features_old.csv')
+                # common_cols_f = set(X_test.columns).intersection(X_train.columns)
+                # common_cols_fv = set(X_val.columns).intersection(X_train.columns)
+                # X_test = X_test[common_cols_f]
+                # X_val = X_val[common_cols_fv]
+                X_test_1 = select_features_from_paper(X_test_1, group, key)
+                X_train_1 = select_features_from_paper(X_train_1, group, key)
+                X_val_1 = select_features_from_paper(X_val_1, group, key)
+
             X_train = pd.concat([X_train, X_train_1], axis=1)
             X_test = pd.concat([X_test, X_test_1], axis=1)
             X_val = pd.concat([X_val, X_val_1], axis=1)
@@ -116,23 +134,6 @@ def sensitivity_analysis(data_name, filepath, group, select_features = False):
 
 
 
-    if select_features == False:
-        file_name = "all_features"
-
-    if select_features == True:
-        file_name = "selected_features"
-        #top_features = calculate_feature_importance(X_train, y_train, group)
-        #top_features_names = list(map(lambda x: x[0], top_features))
-        #print(top_features_names)
-        #X_train = X_train[top_features_names]
-        #X_train.to_csv('data/selected_features_old.csv')
-        #common_cols_f = set(X_test.columns).intersection(X_train.columns)
-        #common_cols_fv = set(X_val.columns).intersection(X_train.columns)
-        #X_test = X_test[common_cols_f]
-        #X_val = X_val[common_cols_fv]
-        X_test = select_features_from_paper(X_test, group)
-        X_train = select_features_from_paper(X_train, group)
-        X_val = select_features_from_paper(X_val, group)
 
     scaler = MinMaxScaler()
     scaler.fit(X_train)
@@ -149,7 +150,7 @@ def sensitivity_analysis(data_name, filepath, group, select_features = False):
     # define a range of values for the maximum depth
     if group == "old":
         param_ranges = {
-            'n_estimators': np.arange(1, 100, 1, dtype=int),
+            'n_estimators': np.arange(1, 400, 10, dtype=int),
             'max_depth': np.arange(2, 20, 1, dtype=int),
             'min_samples_split': np.arange(2, 25, 1, dtype=int),
             'min_samples_leaf': np.arange(2, 50, 1, dtype=int),
@@ -159,20 +160,20 @@ def sensitivity_analysis(data_name, filepath, group, select_features = False):
         }
     if group == "young":
         param_ranges = {
-            'n_estimators': np.arange(1, 50, 1, dtype=int),
+            'n_estimators': np.arange(1, 400, 10, dtype=int),
             'max_depth': np.arange(2, 20, 1, dtype=int),
             'min_samples_split': np.arange(2, 25, 1, dtype=int),
-            'min_samples_leaf': np.arange(2, 50, 2, dtype=int),
+            'min_samples_leaf': np.arange(2, 50, 1, dtype=int),
             'max_features': ['sqrt', 'log2'],  # 'sqrt', 'log2']
             #'bootstrap': [True, False],
             'random_state': [1234]
         }
     if group == "all":
         param_ranges = {
-            'n_estimators': np.arange(1, 100, 5, dtype=int),
-            'max_depth': np.arange(2, 20, 2, dtype=int),
-            'min_samples_split': np.arange(2, 25, 2, dtype=int),
-            'min_samples_leaf': np.arange(2, 50, 2, dtype=int),
+            'n_estimators': np.arange(1, 400, 10, dtype=int),
+            'max_depth': np.arange(2, 20, 1, dtype=int),
+            'min_samples_split': np.arange(2, 25, 1, dtype=int),
+            'min_samples_leaf': np.arange(2, 50, 1, dtype=int),
             'max_features': ['sqrt', 'log2'],  # 'sqrt', 'log2']
             #'bootstrap': [True, False],
             'random_state': [1234]
@@ -312,7 +313,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     data_name = args.data_name
     if data_name == FUDAN:
-        sensitivity_analysis(data_name=args.data_name, filepath=args.filepath, group="all", select_features=True)
+        sensitivity_analysis(data_name=args.data_name, filepath=args.filepath, group="all", select_features=False)
     elif data_name == HUADONG1:
         sensitivity_analysis(data_name=args.data_name, filepath=args.filepath)
     else:
