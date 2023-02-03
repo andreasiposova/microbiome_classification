@@ -1,0 +1,9 @@
+\begin{tabular}{lllllllllllllll}
+\toprule
+{} &              Group &        class\_weight & max\_depth & max\_features & min\_samples\_leaf & min\_samples\_split & n\_estimators & random\_state &  accuracy & precision &    recall &   roc\_auc &        f1 &        f2 \\
+\midrule
+0 &  selected\_features &  balanced\_subsample &        12 &         log2 &                2 &                 2 &           35 &         1234 &   0.97377 &  0.974684 &  0.974684 &  0.973736 &  0.974684 &  0.974684 \\
+0 &  selected\_features &  balanced\_subsample &        12 &         log2 &                2 &                 2 &           35 &         1234 &  0.847328 &  0.923077 &       0.8 &  0.855357 &  0.857143 &  0.821918 \\
+0 &  selected\_features &  balanced\_subsample &        12 &         log2 &                2 &                 2 &           35 &         1234 &  0.757576 &  0.953271 &  0.703448 &  0.804554 &  0.809524 &  0.742358 \\
+\bottomrule
+\end{tabular}
