@@ -94,7 +94,7 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
         #'f1': make_scorer(f1_score)
     }
 
-    # Instantiate the classifier
+    # initialize the classifier
     rf = RandomForestClassifier()
     train_scores_gridsearch = []
     test_scores_gridsearch = []
