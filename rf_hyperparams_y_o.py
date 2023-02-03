@@ -56,7 +56,7 @@ young_old_labels_path = 'data/Yang_PRJNA763023/SraRunTable.csv'
 def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, file_name, group):
     if group == "old":
         param_grid = {
-            'n_estimators': np.arange(5, 50, 2, dtype=int),
+            'n_estimators': np.arange(3, 50, 1, dtype=int),
             'max_depth': np.arange(2, 12, 1, dtype=int),
             'min_samples_split': np.arange(2, 15, 2, dtype=int),
             'min_samples_leaf': np.arange(2, 30, 2, dtype=int),
@@ -78,10 +78,10 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
 
     if group == "all":
         param_grid = {
-            'n_estimators': np.arange(10, 1100, 20, dtype=int),
-            'max_depth': np.arange(2, 20, 10, dtype=int),
-            'min_samples_split': np.arange(2, 30, 10, dtype=int),
-            'min_samples_leaf': np.arange(2, 30, 10, dtype=int),
+            'n_estimators': np.arange(10, 120, 1, dtype=int),
+            'max_depth': np.arange(2, 14, 1, dtype=int),
+            'min_samples_split': np.arange(2, 14, 1, dtype=int),
+            'min_samples_leaf': np.arange(2, 50, 2, dtype=int),
             'max_features': ['sqrt', 'log2'],  # 'sqrt', 'log2'],
             'random_state': [1234],
             'class_weight': ['balanced_subsample']
@@ -159,7 +159,7 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
     #for i in range(len(grid_val_scores)):
      #   keys = [k for k, v in grid_val_scores[i].items() if 0.8 <= v['roc_auc'] <= 0.9]
 
-    results_auroc = [d for d in grid_val_scores if 0.78 <= d['roc_auc'] <= 1.0]
+    results_auroc = [d for d in grid_val_scores if 0.5 <= d['roc_auc'] <= 1.0]
     best_auroc_params = max(results_auroc, key= lambda x: x['roc_auc'])
     best_params = best_auroc_params['params']
 
@@ -311,24 +311,26 @@ def run_rf_tuning(data_name, filepath, group, select_features = True):
 
     for key in data:
         if key == "genus_relative" or key == "family_relative":
-            #X_train, X_test, y_train, y_test = preprocess_data(data[key], yang_metadata_path) #preprocess_fudan_data?
+            # X_train, X_test, y_train, y_test = preprocess_data(data[key], yang_metadata_path) #preprocess_fudan_data?
             if group == "all":
-                # get train, test, val sets from the necessary files (ALL samples, both young-onset or old-onset CRC vs healthy samples)
                 X_train_1, X_test_1, y_train, y_test = preprocess_data(data[key], yang_metadata_path)
                 X_h1, y_h1 = preprocess_huadong(huadong_data1[key], yang_metadata_path)
                 X_h2, y_h2 = preprocess_huadong(huadong_data2[key], yang_metadata_path)
-            else:
-                #get train, test, val sets from the necessary files and chosen group (young-onset or old-onset CRC vs healthy samples)
-                X_train_1, X_test_1, X_val_1, y_train, y_test, y_val = full_preprocessing_y_o_labels(data, huadong_data1, huadong_data2, key, yang_metadata_path, young_old_labels_path, group)
-            #if we want to use all features, set the file_name
+                X_val_1 = pd.concat([X_h1, X_h2])
+                y_val = y_h1 + y_h2
+            elif group == 'young' or group == 'old':
+                X_train_1, X_test_1, X_val_1, y_train, y_test, y_val = full_preprocessing_y_o_labels(data,
+                                                                                                     huadong_data1,
+                                                                                                     huadong_data2, key,
+                                                                                                     yang_metadata_path,
+                                                                                                     young_old_labels_path,
+                                                                                                     group)
+
             if select_features == False:
                 file_name = "all_features"
-                print("All features will be used")
-            #if we want to select features used in the paper, set the file_name and perform feature selection
+
             if select_features == True:
                 file_name = "selected_features"
-                print(f"Selecting features...")
-                #feature selection by RF, 10-fold CV, excluding each feature at a time, based on mean decrease accuracy per feature
                 # top_features = calculate_feature_importance(X_train, y_train, group)
                 # top_features_names = list(map(lambda x: x[0], top_features))
                 # print(top_features_names)
@@ -338,7 +340,6 @@ def run_rf_tuning(data_name, filepath, group, select_features = True):
                 # common_cols_fv = set(X_val.columns).intersection(X_train.columns)
                 # X_test = X_test[common_cols_f]
                 # X_val = X_val[common_cols_fv]
-                #feature selection based on the feature names from the Yang et.al. paper
                 X_test_1 = select_features_from_paper(X_test_1, group, key)
                 X_train_1 = select_features_from_paper(X_train_1, group, key)
                 X_val_1 = select_features_from_paper(X_val_1, group, key)
@@ -346,8 +347,6 @@ def run_rf_tuning(data_name, filepath, group, select_features = True):
             X_train = pd.concat([X_train, X_train_1], axis=1)
             X_test = pd.concat([X_test, X_test_1], axis=1)
             X_val = pd.concat([X_val, X_val_1], axis=1)
-
-
 
     common_cols_t = set(X_test.columns).intersection(X_val.columns)
     common_cols_v = set(X_val.columns).intersection(X_test.columns)
@@ -420,7 +419,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     data_name = args.data_name
     if data_name == FUDAN:
-        run_rf_tuning(data_name=args.data_name, filepath=args.filepath, group="old", select_features=True)
+        run_rf_tuning(data_name=args.data_name, filepath=args.filepath, group="all", select_features=False)
     elif data_name == HUADONG1:
         run_rf_tuning(data_name=args.data_name, filepath=args.filepath, h1_filepath=args.h1_filepath, h2_filepath=args.h2_filepath)
     else:
