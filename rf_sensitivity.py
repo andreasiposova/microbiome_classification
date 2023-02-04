@@ -146,11 +146,11 @@ def sensitivity_analysis(data_name, filepath, group, select_features = False):
 
 
     # define estimator
-    estimator = Pipeline([("model", RandomForestClassifier(n_estimators=30, max_depth=5, min_samples_split=16, min_samples_leaf=20, max_features='sqrt', random_state=1234))])
+    estimator = Pipeline([("model", RandomForestClassifier(random_state=1234))]) #n_estimators=30, max_depth=5, min_samples_split=16, min_samples_leaf=20, max_features='sqrt',
     # define a range of values for the maximum depth
     if group == "old":
         param_ranges = {
-            'n_estimators': np.arange(1, 400, 10, dtype=int),
+            'n_estimators': np.arange(1, 800, 50, dtype=int),
             'max_depth': np.arange(2, 20, 1, dtype=int),
             'min_samples_split': np.arange(2, 25, 1, dtype=int),
             'min_samples_leaf': np.arange(2, 50, 1, dtype=int),
@@ -160,10 +160,10 @@ def sensitivity_analysis(data_name, filepath, group, select_features = False):
         }
     if group == "young":
         param_ranges = {
-            'n_estimators': np.arange(1, 400, 10, dtype=int),
-            'max_depth': np.arange(2, 20, 1, dtype=int),
-            'min_samples_split': np.arange(2, 25, 1, dtype=int),
-            'min_samples_leaf': np.arange(2, 50, 1, dtype=int),
+            'n_estimators': np.arange(50, 250, 10, dtype=int),
+            'max_depth': np.arange(2, 12, 2, dtype=int),
+            'min_samples_split': np.arange(10, 25, 2, dtype=int),
+            'min_samples_leaf': np.arange(10, 50, 5, dtype=int),
             'max_features': ['sqrt', 'log2'],  # 'sqrt', 'log2']
             #'bootstrap': [True, False],
             'random_state': [1234]
@@ -313,7 +313,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     data_name = args.data_name
     if data_name == FUDAN:
-        sensitivity_analysis(data_name=args.data_name, filepath=args.filepath, group="all", select_features=False)
+        sensitivity_analysis(data_name=args.data_name, filepath=args.filepath, group="young", select_features=True)
     elif data_name == HUADONG1:
         sensitivity_analysis(data_name=args.data_name, filepath=args.filepath)
     else:

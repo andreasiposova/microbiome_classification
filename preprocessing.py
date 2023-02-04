@@ -12,9 +12,10 @@ def replace_inf_vals(X, y):
     for col in X.columns:
         # find max value of column
         max_value_train = np.nanmax(X[col][X[col] != np.inf])
+        min_value_train = np.nanmin(X[col][X[col] != np.inf])
         # replace inf and -inf in column with max value of column
-        X[col].replace([np.inf, -np.inf], 10000, inplace=True)
-        X[col].replace([-np.inf], -10000, inplace=True)
+        X[col].replace([np.inf, -np.inf], max_value_train, inplace=True)
+        X[col].replace([-np.inf], min_value_train, inplace=True)
         # drop the inf values from the test set
         #X = X.replace([np.inf, -np.inf], np.nan).dropna()
     # get the respective y when we drop observations from the test set

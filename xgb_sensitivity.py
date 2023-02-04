@@ -95,12 +95,33 @@ def sensitivity_analysis(data_name, filepath, group, select_features = True):
                 X_train_1, X_test_1, y_train, y_test = preprocess_data(data[key], yang_metadata_path)
                 X_h1, y_h1 = preprocess_huadong(huadong_data1[key], yang_metadata_path)
                 X_h2, y_h2 = preprocess_huadong(huadong_data2[key], yang_metadata_path)
-            else:
-                X_train_1, X_test_1, X_val_1, y_train, y_test, y_val = full_preprocessing_y_o_labels(data, huadong_data1,
+                X_val_1 = pd.concat([X_h1, X_h2])
+                y_val = y_h1 + y_h2
+            elif group == 'young' or group == 'old':
+                X_train_1, X_test_1, X_val_1, y_train, y_test, y_val = full_preprocessing_y_o_labels(data,
+                                                                                                     huadong_data1,
                                                                                                      huadong_data2, key,
                                                                                                      yang_metadata_path,
                                                                                                      young_old_labels_path,
                                                                                                      group)
+
+            if select_features == False:
+                file_name = "all_features"
+
+            if select_features == True:
+                file_name = "selected_features"
+                # top_features = calculate_feature_importance(X_train, y_train, group)
+                # top_features_names = list(map(lambda x: x[0], top_features))
+                # print(top_features_names)
+                # X_train = X_train[top_features_names]
+                # X_train.to_csv('data/selected_features_old.csv')
+                # common_cols_f = set(X_test.columns).intersection(X_train.columns)
+                # common_cols_fv = set(X_val.columns).intersection(X_train.columns)
+                # X_test = X_test[common_cols_f]
+                # X_val = X_val[common_cols_fv]
+                X_test_1 = select_features_from_paper(X_test_1, group, key)
+                X_train_1 = select_features_from_paper(X_train_1, group, key)
+                X_val_1 = select_features_from_paper(X_val_1, group, key)
 
             X_train = pd.concat([X_train, X_train_1], axis=1)
             X_test = pd.concat([X_test, X_test_1], axis=1)
@@ -120,31 +141,15 @@ def sensitivity_analysis(data_name, filepath, group, select_features = True):
     # X_train = X_train.append(X_test)
     # y_train = y_train + y_test
 
-
-
-    if select_features == False:
-        file_name = "all_features"
-
-    if select_features == True:
-        file_name = "selected_features"
-        #top_features = calculate_feature_importance(X_train, y_train, group)
-        #top_features_names = list(map(lambda x: x[0], top_features))
-        #print(top_features_names)
-        #X_train = X_train[top_features_names]
-        #X_train.to_csv('data/selected_features_old.csv')
-        #common_cols_f = set(X_test.columns).intersection(X_train.columns)
-        #common_cols_fv = set(X_val.columns).intersection(X_train.columns)
-        #X_test = X_test[common_cols_f]
-        #X_val = X_val[common_cols_fv]
-        X_test = select_features_from_paper(X_test, group)
-        X_train = select_features_from_paper(X_train, group)
-        X_val = select_features_from_paper(X_val, group)
-
     scaler = MinMaxScaler()
     scaler.fit(X_train)
     X_train = scaler.transform(X_train)
     X_test = scaler.transform(X_test)
     X_val = scaler.transform(X_val)
+    print('Number of train samples :', len(X_train))
+    print('Number of test samples :', len(X_test))
+    print('Number of validation samples :', len(X_val))
+
 
     model = xgb.XGBClassifier(n_estimators=5, verbose=0, silent=True, random_state=1234)
     # define estimator

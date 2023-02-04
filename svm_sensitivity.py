@@ -74,7 +74,7 @@ def calculate_performance(y_true, y_pred):
 
     return accuracies, precisions, recalls, roc_aucs, f1s, f2s
 
-def sensitivity_analysis(data_name, filepath, group, select_features = True):
+def sensitivity_analysis(data_name, filepath, group, select_features):
     full_results = []
     y_o_labels = load_young_old_labels(young_old_labels_path)
     data = load_tsv_files(filepath)
@@ -92,12 +92,33 @@ def sensitivity_analysis(data_name, filepath, group, select_features = True):
                 X_train_1, X_test_1, y_train, y_test = preprocess_data(data[key], yang_metadata_path)
                 X_h1, y_h1 = preprocess_huadong(huadong_data1[key], yang_metadata_path)
                 X_h2, y_h2 = preprocess_huadong(huadong_data2[key], yang_metadata_path)
-            else:
-                X_train_1, X_test_1, X_val_1, y_train, y_test, y_val = full_preprocessing_y_o_labels(data, huadong_data1,
+                X_val_1 = pd.concat([X_h1, X_h2])
+                y_val = y_h1 + y_h2
+            elif group == 'young' or group == 'old':
+                X_train_1, X_test_1, X_val_1, y_train, y_test, y_val = full_preprocessing_y_o_labels(data,
+                                                                                                     huadong_data1,
                                                                                                      huadong_data2, key,
                                                                                                      yang_metadata_path,
                                                                                                      young_old_labels_path,
                                                                                                      group)
+
+            if select_features == False:
+                file_name = "all_features"
+
+            if select_features == True:
+                file_name = "selected_features"
+                # top_features = calculate_feature_importance(X_train, y_train, group)
+                # top_features_names = list(map(lambda x: x[0], top_features))
+                # print(top_features_names)
+                # X_train = X_train[top_features_names]
+                # X_train.to_csv('data/selected_features_old.csv')
+                # common_cols_f = set(X_test.columns).intersection(X_train.columns)
+                # common_cols_fv = set(X_val.columns).intersection(X_train.columns)
+                # X_test = X_test[common_cols_f]
+                # X_val = X_val[common_cols_fv]
+                X_test_1 = select_features_from_paper(X_test_1, group, key)
+                X_train_1 = select_features_from_paper(X_train_1, group, key)
+                X_val_1 = select_features_from_paper(X_val_1, group, key)
 
             X_train = pd.concat([X_train, X_train_1], axis=1)
             X_test = pd.concat([X_test, X_test_1], axis=1)
@@ -117,40 +138,22 @@ def sensitivity_analysis(data_name, filepath, group, select_features = True):
     # X_train = X_train.append(X_test)
     # y_train = y_train + y_test
 
-
-
-    if select_features == False:
-        file_name = "all_features"
-
-    if select_features == True:
-        file_name = "selected_features"
-        #top_features = calculate_feature_importance(X_train, y_train, group)
-        #top_features_names = list(map(lambda x: x[0], top_features))
-        #print(top_features_names)
-        #X_train = X_train[top_features_names]
-        #X_train.to_csv('data/selected_features_old.csv')
-        #common_cols_f = set(X_test.columns).intersection(X_train.columns)
-        #common_cols_fv = set(X_val.columns).intersection(X_train.columns)
-        #X_test = X_test[common_cols_f]
-        #X_val = X_val[common_cols_fv]
-        X_test = select_features_from_paper(X_test, key, group)
-        X_train = select_features_from_paper(X_train, key, group)
-        X_val = select_features_from_paper(X_val, key, group)
-
     scaler = MinMaxScaler()
     scaler.fit(X_train)
     X_train = scaler.transform(X_train)
     X_test = scaler.transform(X_test)
     X_val = scaler.transform(X_val)
-
+    print('Number of train samples :', len(X_train))
+    print('Number of test samples :', len(X_test))
+    print('Number of validation samples :', len(X_val))
 
     # define estimator
     model = svm.SVC()
     estimator = Pipeline([("model", model)])
     # define a range of values for the maximum depth
-    param_ranges = {'C':[1,10],# 100, 1000],
-                    'gamma': [1, 0.5, 0.2, 0.1, 0.01, 0.001,0.0001],
-                    'kernel': ['linear', 'rbf'],
+    param_ranges = {'C':[1, 10, 100, 1000],
+                    'gamma': [1, 0.5, 0.2, 0.1, 0.01, 0.001,0.00001],
+                    'kernel': ['linear', 'rbf', 'poly'],
                     'random_state': [1234]
     }
 
@@ -177,7 +180,7 @@ def sensitivity_analysis(data_name, filepath, group, select_features = True):
             #print(f" value:  {value}")
             model = clone(estimator)  # clone(estimator)
             model.set_params(**{f"model__{param}": value})
-            cv = RepeatedStratifiedKFold(n_splits=2, random_state=1234)
+            cv = RepeatedStratifiedKFold(n_splits=10, random_state=1234)
             scores = cross_validate(model, X_train, y_train,
                                     scoring=["accuracy", "precision", "recall", "roc_auc", "f1"], cv=cv, n_jobs=-1,
                                     return_estimator=True)
@@ -282,7 +285,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     data_name = args.data_name
     if data_name == FUDAN:
-        sensitivity_analysis(data_name=args.data_name, filepath=args.filepath, group = "young")
+        sensitivity_analysis(data_name=args.data_name, filepath=args.filepath, group="young", select_features=True)
 
     else:
         raise ValueError()

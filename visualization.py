@@ -126,8 +126,8 @@ def sensitivity_plot(hp_mean_metrics, data_name, file_name):
 
 
 def cm_plot(y_test, y_pred, data_name, group, file_name, test_or_val):
-    if not os.path.exists(str(Config.PLOTS_DIR) + "/" + str(data_name) + "/" + str(file_name) + "/" + group):
-        os.makedirs(os.path.join(Config.PLOTS_DIR, data_name, file_name, group))
+    if not os.path.exists(str(Config.PLOTS_DIR) + "/" + str(data_name) + "/" + group + "/" + str(file_name)):
+        os.makedirs(os.path.join(Config.PLOTS_DIR, data_name, group, file_name))
 
     label_mapping = {'healthy': 0, 'CRC': 1}
     reverse_mapping = {value: key for key, value in label_mapping.items()}
@@ -139,7 +139,7 @@ def cm_plot(y_test, y_pred, data_name, group, file_name, test_or_val):
     disp = ConfusionMatrixDisplay(cm, display_labels=labels)
     disp.plot()
     plt.title(file_name)
-    plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, file_name, group, f"rf_best_estimator_{test_or_val}_cm.png"))
+    plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, group, file_name, f"rf_best_estimator_{test_or_val}_cm.png"))
     #plt.show()
 
 def grid_search_train_test_plot(train_scores, test_scores, data_name, group):

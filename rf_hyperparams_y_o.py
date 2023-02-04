@@ -56,10 +56,10 @@ young_old_labels_path = 'data/Yang_PRJNA763023/SraRunTable.csv'
 def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, file_name, group):
     if group == "old":
         param_grid = {
-            'n_estimators': np.arange(3, 50, 1, dtype=int),
-            'max_depth': np.arange(2, 12, 1, dtype=int),
-            'min_samples_split': np.arange(2, 15, 2, dtype=int),
-            'min_samples_leaf': np.arange(2, 30, 2, dtype=int),
+            'n_estimators': np.arange(3, 50, 3, dtype=int),
+            'max_depth': np.arange(2, 14, 1, dtype=int),
+            #'min_samples_split': np.arange(2, 12, 2, dtype=int),
+            'min_samples_leaf': np.arange(2, 25, 1, dtype=int),
             'max_features': ['sqrt', 'log2'], # 'sqrt', 'log2'],
             #'criteria': ['gini', 'entropy'],
             'random_state': [1234],
@@ -67,21 +67,21 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
         }
     if group == "young":
         param_grid = {
-            'n_estimators': np.arange(10, 400, 10, dtype=int),
-            'max_depth': np.arange(2, 20, 1, dtype=int),
-            'min_samples_split': np.arange(2, 20, 2, dtype=int),
-            'min_samples_leaf': np.arange(2, 20, 2, dtype=int),
-            'max_features': ['sqrt', 'log2'],  # 'sqrt', 'log2'],
-            'random_state': [1234],
-            'class_weight': ["balanced_subsample"]
+            'n_estimators': np.arange(50, 250, 20, dtype=int),
+            'max_depth': np.arange(2, 12, 3, dtype=int),
+            'min_samples_split': np.arange(9, 25, 3, dtype=int),
+            'min_samples_leaf': np.arange(10, 50, 5, dtype=int),
+            'max_features': ['sqrt', 'log2'],  # 'sqrt', 'log2']
+            #'bootstrap': [True, False],
+            'random_state': [1234]
         }
 
     if group == "all":
         param_grid = {
-            'n_estimators': np.arange(10, 120, 1, dtype=int),
-            'max_depth': np.arange(2, 14, 1, dtype=int),
-            'min_samples_split': np.arange(2, 14, 1, dtype=int),
-            'min_samples_leaf': np.arange(2, 50, 2, dtype=int),
+            'n_estimators': [10, 100, 1000], #np.arange(2, 60, 5, dtype=int),
+            'max_depth': [5, 20], #np.arange(2, 12, 1, dtype=int),
+            #'min_samples_split': np.arange(2, 12, 3, dtype=int),
+            'min_samples_leaf': [10, 30, 40], #np.arange(2, 50, 5, dtype=int),
             'max_features': ['sqrt', 'log2'],  # 'sqrt', 'log2'],
             'random_state': [1234],
             'class_weight': ['balanced_subsample']
@@ -90,7 +90,8 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
     # Define the scoring methods
     scoring = {
         'roc_auc': make_scorer(roc_auc_score),
-        'precision': make_scorer(accuracy_score),
+        'accuracy': make_scorer(accuracy_score)
+        #'precision': make_scorer(accuracy_score),
         #'f1': make_scorer(f1_score)
     }
 
@@ -252,7 +253,7 @@ def visualize_results(test_scores, data_name, group, file_name, y_train, y_train
     #sensitivity_plot(min_samples_split_mean_metrics, data_name, file_name)
     #sensitivity_plot(min_samples_leaf_mean_metrics, data_name, file_name)
     #sensitivity_plot(class_weight_mean_metrics, data_name, file_name)
-    cm_plot(y_train, y_train_pred, data_name, group, file_name, "test")
+    cm_plot(y_train, y_train_pred, data_name, group, file_name, "train")
     cm_plot(y_test, y_pred, data_name, group, file_name, "test")
     cm_plot(y_val, y_pred_val, data_name, group, file_name, "val")
 
@@ -319,12 +320,7 @@ def run_rf_tuning(data_name, filepath, group, select_features = True):
                 X_val_1 = pd.concat([X_h1, X_h2])
                 y_val = y_h1 + y_h2
             elif group == 'young' or group == 'old':
-                X_train_1, X_test_1, X_val_1, y_train, y_test, y_val = full_preprocessing_y_o_labels(data,
-                                                                                                     huadong_data1,
-                                                                                                     huadong_data2, key,
-                                                                                                     yang_metadata_path,
-                                                                                                     young_old_labels_path,
-                                                                                                     group)
+                X_train_1, X_test_1, X_val_1, y_train, y_test, y_val = full_preprocessing_y_o_labels(data,huadong_data1, huadong_data2, key,yang_metadata_path,young_old_labels_path,group)
 
             if select_features == False:
                 file_name = "all_features"
@@ -348,6 +344,7 @@ def run_rf_tuning(data_name, filepath, group, select_features = True):
             X_test = pd.concat([X_test, X_test_1], axis=1)
             X_val = pd.concat([X_val, X_val_1], axis=1)
 
+
     common_cols_t = set(X_test.columns).intersection(X_val.columns)
     common_cols_v = set(X_val.columns).intersection(X_test.columns)
 
@@ -367,11 +364,11 @@ def run_rf_tuning(data_name, filepath, group, select_features = True):
 
     print(f"Running experiments on {group} samples")
 
-    #scaler = MinMaxScaler()
-    #scaler.fit(X_train)
-    #X_train = scaler.transform(X_train)
-    #X_test = scaler.transform(X_test)
-    #X_val = scaler.transform(X_val)
+    scaler = MinMaxScaler()
+    scaler.fit(X_train)
+    X_train = scaler.transform(X_train)
+    X_test = scaler.transform(X_test)
+    X_val = scaler.transform(X_val)
 
     train_scores, scores, val_scores, best_results_train, best_results_test, best_estimator, best_auroc_params, best_results_on_val, y_train_pred, y_pred, y_val_pred = grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, file_name, group)
     if select_features == True:
@@ -413,16 +410,33 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_name', type=str, default=FUDAN)
     parser.add_argument('--filepath', type=str, default=fudan_filepath)
-    parser.add_argument('--group', type=str, default='old')
+    parser.add_argument('--group', type=str, default='young')
     parser.add_argument('--select_features', type=bool, default=True)
 
     args = parser.parse_args()
     data_name = args.data_name
-    if data_name == FUDAN:
-        run_rf_tuning(data_name=args.data_name, filepath=args.filepath, group="all", select_features=False)
-    elif data_name == HUADONG1:
-        run_rf_tuning(data_name=args.data_name, filepath=args.filepath, h1_filepath=args.h1_filepath, h2_filepath=args.h2_filepath)
-    else:
-        raise ValueError()
+    group = args.group
+    select_features = args.select_features
+
+    run_rf_tuning(data_name=args.data_name, filepath=args.filepath, group=args.group, select_features=args.select_features)
+    """if group == 'young':
+        if select_features == True:
+            run_rf_tuning(data_name=args.data_name, filepath=args.filepath, group="young", select_features=True)
+        if select_features == False:
+            run_rf_tuning(data_name=args.data_name, filepath=args.filepath, group="young", select_features=False)
+    elif group == 'old':
+        if select_features == True:
+            run_rf_tuning(data_name=args.data_name, filepath=args.filepath, group="young", select_features=True)
+        if select_features == False:
+            run_rf_tuning(data_name=args.data_name, filepath=args.filepath, group="young", select_features=False)
+    elif group == 'all':
+        if select_features == True:
+            run_rf_tuning(data_name=args.data_name, filepath=args.filepath, group="young", select_features=True)
+        if select_features == False:
+            run_rf_tuning(data_name=args.data_name, filepath=args.filepath, group="young", select_features=False)"""
+    #elif data_name == HUADONG1:
+    #    run_rf_tuning(data_name=args.data_name, filepath=args.filepath, h1_filepath=args.h1_filepath, h2_filepath=args.h2_filepath)
+    #else:
+    #    raise ValueError()
 
 
