@@ -129,8 +129,8 @@ def sensitivity_analysis(data_name, filepath, group, select_features = False):
     X_val = X_val[common_cols_v]
     X_train = X_train[common_cols_t]
     X_test = X_test[common_cols_t]
-    #X_train = X_train.append(X_test)
-    #y_train = y_train + y_test
+    X_train = X_train.append(X_test)
+    y_train = y_train + y_test
 
 
 
@@ -278,7 +278,7 @@ def sensitivity_analysis(data_name, filepath, group, select_features = False):
         else:
             x = param_ranges[param]
         plt.plot(x, roc_aucs_train, label="Train")
-        plt.plot(x, roc_aucs_test, label="Test")
+        #plt.plot(x, roc_aucs_test, label="Test")
         plt.plot(x, roc_aucs_val, label="Validation")
         plt.plot(x, roc_aucs_cv, label="CV mean")
         plt.xlabel(param)
@@ -307,13 +307,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_name', type=str, default=FUDAN)
     parser.add_argument('--filepath', type=str, default=fudan_filepath)
-    parser.add_argument('--group', type=str, default="old")
+    parser.add_argument('--group', type=str, default="all")
     parser.add_argument('--select_features', type=str, default=False)
 
     args = parser.parse_args()
     data_name = args.data_name
     if data_name == FUDAN:
-        sensitivity_analysis(data_name=args.data_name, filepath=args.filepath, group="young", select_features=True)
+        sensitivity_analysis(data_name=args.data_name, filepath=args.filepath, group="all", select_features=False)
     elif data_name == HUADONG1:
         sensitivity_analysis(data_name=args.data_name, filepath=args.filepath)
     else:

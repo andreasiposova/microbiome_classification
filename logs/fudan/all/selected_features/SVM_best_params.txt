@@ -1,0 +1,1 @@
+{'file': 'selected_features', 'params': {'C': 0.1, 'degree': 2, 'gamma': 'scale', 'kernel': 'sigmoid', 'probability': True, 'shrinking': True}, 'accuracy': 0.6622950819672131, 'precision': 0.7547169811320755, 'recall': 0.6521739130434783, 'roc_auc': 0.6649299317283507, 'f1': 0.6997084548104957, 'f2': 0.6703910614525139}

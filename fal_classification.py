@@ -116,7 +116,7 @@ def load_preprocessed_data(data_name=FUDAN, filepath=fudan_filepath, group='old'
 
     return X_train, X_test, X_val, y_train, y_test, y_val
 
-def perform_classification(X_train, X_test, X_val, y_train, y_test, y_val, params, file_name, group):
+def perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, params, file_name, group):
     full_results_train = []
     full_results_test = []
     full_results_val = []
@@ -130,71 +130,80 @@ def perform_classification(X_train, X_test, X_val, y_train, y_test, y_val, param
     #y_test_pred = clf.predict(X_test)
     #y_val_pred = clf.predict(X_val)
     threshold = 0.515
-    clf.fit(X_train, y_train)
-    for i in range(0, 10):
+    predictions = []
+    n_runs = 10
+    for i in range(n_runs):
         train_results = pd.DataFrame()
         test_results = pd.DataFrame()
         val_results = pd.DataFrame()
+        clf.fit(X_train, y_train)
+        predictions.append(clf.predict_proba(X_train))
+
+    predictions = predictions[1] #get the average prediction (take always the first column
+    #from each run, and then per sample, take average of those 10 values
+    # #then this can be used as y_pred)
+    #or take both columns and use as y_train_prob and then transform to y_train_pred
 
 
-        y_train_prob = clf.predict_proba(X_train)
-        y_train_pred = (y_train_prob[:, 1] >= threshold).astype('int')
-        plot_conf_int(y_train, y_train_prob, X_train, X_train, clf, data_name=FUDAN, file_name=file_name, group=group, set_name="train")
+
+    y_train_prob = clf.predict_proba(X_train)
+    y_train_pred = (y_train_prob[:, 1] >= threshold).astype('int')
+    plot_conf_int(y_train, y_train_prob, X_train, X_train, clf, data_name=FUDAN, file_name=file_name, group=group, set_name="train")
 
 
-        y_test_prob = clf.predict_proba(X_test)
-        y_test_pred = (y_test_prob[:, 1] >= threshold).astype('int')
-        plot_conf_int(y_test, y_test_prob, X_train, X_test, clf, data_name=FUDAN, file_name=file_name, group=group, set_name="test")
+    y_test_prob = clf.predict_proba(X_test)
+    y_test_pred = (y_test_prob[:, 1] >= threshold).astype('int')
+    plot_conf_int(y_test, y_test_prob, X_train, X_test, clf, data_name=FUDAN, file_name=file_name, group=group, set_name="test")
 
-        y_val_prob = clf.predict_proba(X_val)
-        y_val_pred = (y_val_prob[:, 1] >= threshold).astype('int')
-        plot_conf_int(y_val, y_val_prob, X_train, X_val, clf, data_name=FUDAN, file_name=file_name, group=group, set_name="val")
+    y_val_prob = clf.predict_proba(X_val)
+    y_val_pred = (y_val_prob[:, 1] >= threshold).astype('int')
+    plot_conf_int(y_val, y_val_prob, X_train, X_val, clf, data_name=FUDAN, file_name=file_name, group=group, set_name="val")
 
-        acc_train = accuracy_score(y_train, y_train_pred)
-        prec_train = precision_score(y_train, y_train_pred)
-        recall_train = recall_score(y_train, y_train_pred)
-        roc_auc_train = roc_auc_score(y_train, y_train_pred)
-        f1_train = f1_score(y_train, y_train_pred)
-        f2_train = fbeta_score(y_train, y_train_pred, beta=2)
-        interval_len = 1.96 * sqrt((roc_auc_train * (1 - roc_auc_train)) / len(y_train))
-        interval_low = roc_auc_train - interval_len
-        interval_high = roc_auc_train + interval_len
-        ci_train = [interval_low, interval_high]
-        train_set_res = {'accuracy': acc_train, 'precision': prec_train, 'recall': recall_train, 'roc_auc': roc_auc_train, 'f1': f1_train,
-                              'f2': f2_train, 'auc_conf_int': ci_train}
-        train_results = train_results.append(train_set_res, ignore_index=True)
-
-
-        acc_test = accuracy_score(y_test, y_test_pred)
-        prec_test = precision_score(y_test, y_test_pred)
-        recall_test = recall_score(y_test, y_test_pred)
-        roc_auc_test = roc_auc_score(y_test, y_test_pred)
-        f1_test = f1_score(y_test, y_test_pred)
-        f2_test = fbeta_score(y_test, y_test_pred, beta=2)
-        interval_len = 1.96 * sqrt((roc_auc_test * (1 - roc_auc_test)) / len(y_test))
-        interval_low = roc_auc_test - interval_len
-        interval_high = roc_auc_test + interval_len
-        ci_test = [interval_low, interval_high]
-        test_set_res = {'accuracy': acc_test, 'precision': prec_test, 'recall': recall_test,
-                              'roc_auc': roc_auc_test, 'f1': f1_test,
-                              'f2': f2_test, 'auc_conf_int': ci_test}
-        test_results = test_results.append(test_set_res, ignore_index=True)
+    acc_train = accuracy_score(y_train, y_train_pred)
+    prec_train = precision_score(y_train, y_train_pred)
+    recall_train = recall_score(y_train, y_train_pred)
+    roc_auc_train = roc_auc_score(y_train, y_train_pred)
+    f1_train = f1_score(y_train, y_train_pred)
+    f2_train = fbeta_score(y_train, y_train_pred, beta=2)
+    interval_len = 1.96 * sqrt((roc_auc_train * (1 - roc_auc_train)) / len(y_train))
+    interval_low = roc_auc_train - interval_len
+    interval_high = roc_auc_train + interval_len
+    ci_train = [interval_low, interval_high]
+    train_set_res = {'accuracy': acc_train, 'precision': prec_train, 'recall': recall_train, 'roc_auc': roc_auc_train, 'f1': f1_train,
+                          'f2': f2_train, 'auc_conf_int': ci_train}
+    train_results = train_results.append(train_set_res, ignore_index=True)
 
 
-        acc_val = accuracy_score(y_val, y_val_pred)
-        prec_val = precision_score(y_val, y_val_pred)
-        recall_val = recall_score(y_val, y_val_pred)
-        roc_auc_val = roc_auc_score(y_val, y_val_pred)
-        f1_val = f1_score(y_val, y_val_pred)
-        f2_val = fbeta_score(y_val, y_val_pred, beta=2)
-        interval_len = 1.96 * sqrt((roc_auc_val * (1 - roc_auc_val)) / len(y_val))
-        interval_low = roc_auc_val - interval_len
-        interval_high = roc_auc_val + interval_len
-        ci_val = [interval_low, interval_high]
-        val_set_res = {'accuracy': acc_val, 'precision': prec_val, 'recall': recall_val,
-                              'roc_auc': roc_auc_val, 'f1': f1_val,
-                              'f2': f2_val, 'auc_conf_int': ci_val}
-        val_results = val_results.append(val_set_res, ignore_index=True)
+    acc_test = accuracy_score(y_test, y_test_pred)
+    prec_test = precision_score(y_test, y_test_pred)
+    recall_test = recall_score(y_test, y_test_pred)
+    roc_auc_test = roc_auc_score(y_test, y_test_pred)
+    f1_test = f1_score(y_test, y_test_pred)
+    f2_test = fbeta_score(y_test, y_test_pred, beta=2)
+    interval_len = 1.96 * sqrt((roc_auc_test * (1 - roc_auc_test)) / len(y_test))
+    interval_low = roc_auc_test - interval_len
+    interval_high = roc_auc_test + interval_len
+    ci_test = [interval_low, interval_high]
+    test_set_res = {'accuracy': acc_test, 'precision': prec_test, 'recall': recall_test,
+                          'roc_auc': roc_auc_test, 'f1': f1_test,
+                          'f2': f2_test, 'auc_conf_int': ci_test}
+    test_results = test_results.append(test_set_res, ignore_index=True)
+
+
+    acc_val = accuracy_score(y_val, y_val_pred)
+    prec_val = precision_score(y_val, y_val_pred)
+    recall_val = recall_score(y_val, y_val_pred)
+    roc_auc_val = roc_auc_score(y_val, y_val_pred)
+    f1_val = f1_score(y_val, y_val_pred)
+    f2_val = fbeta_score(y_val, y_val_pred, beta=2)
+    interval_len = 1.96 * sqrt((roc_auc_val * (1 - roc_auc_val)) / len(y_val))
+    interval_low = roc_auc_val - interval_len
+    interval_high = roc_auc_val + interval_len
+    ci_val = [interval_low, interval_high]
+    val_set_res = {'accuracy': acc_val, 'precision': prec_val, 'recall': recall_val,
+                          'roc_auc': roc_auc_val, 'f1': f1_val,
+                          'f2': f2_val, 'auc_conf_int': ci_val}
+    val_results = val_results.append(val_set_res, ignore_index=True)
 
     train_results = train_results.mean()
     test_results = test_results.mean()
@@ -217,10 +226,10 @@ def get_all_results(data_name, filepath, group, select_features=True, fal=True):
             X_train = apply_feature_abundance_limits(X_train)
             X_test = apply_feature_abundance_limits(X_test)
             X_val = apply_feature_abundance_limits(X_val)
-            results = perform_classification(X_train, X_test, X_val, y_train, y_test, y_val, params, file_name="selected_features", group=group)
+            results = perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, params, file_name="selected_features", group=group)
             print(results)
         if fal == False:
-            results = perform_classification(X_train, X_test, X_val, y_train, y_test, y_val, params, file_name="selected_features", group=group)
+            results = perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, params, file_name="selected_features", group=group)
             print(results)
     if select_features == False:
         params = get_best_params(FUDAN, group, 'all_features', param_file='best_params')
@@ -228,10 +237,10 @@ def get_all_results(data_name, filepath, group, select_features=True, fal=True):
             X_train = apply_feature_abundance_limits(X_train)
             X_test = apply_feature_abundance_limits(X_test)
             X_val = apply_feature_abundance_limits(X_val)
-            results = perform_classification(X_train, X_test, X_val, y_train, y_test, y_val, params, file_name="all_features", group=group)
+            results = perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, params, file_name="all_features", group=group)
             print(results)
         if fal == False:
-            results = perform_classification(X_train, X_test, X_val, y_train, y_test, y_val, params, file_name="all_features", group=group)
+            results = perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, params, file_name="all_features", group=group)
             print(results)
 
 get_all_results(FUDAN, fudan_filepath, 'old', select_features=True, fal=True)

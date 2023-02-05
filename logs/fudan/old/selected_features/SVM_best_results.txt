@@ -1,0 +1,9 @@
+\begin{tabular}{llllllllllll}
+\toprule
+{} &              Group &     C & gamma &  kernel & random\_state &  accuracy & precision &    recall &   roc\_auc &        f1 &        f2 \\
+\midrule
+0 &  selected\_features &  1000 &     1 &  linear &         1234 &   0.82623 &   0.83871 &  0.822785 &  0.826358 &  0.830671 &  0.825921 \\
+0 &  selected\_features &  1000 &     1 &  linear &         1234 &  0.725191 &  0.791045 &  0.706667 &  0.728333 &  0.746479 &  0.722071 \\
+0 &  selected\_features &  1000 &     1 &  linear &         1234 &  0.651515 &  0.851852 &  0.634483 &  0.666298 &  0.727273 &  0.668605 \\
+\bottomrule
+\end{tabular}

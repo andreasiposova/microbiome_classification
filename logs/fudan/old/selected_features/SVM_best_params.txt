@@ -1,0 +1,1 @@
+{'file': 'selected_features', 'params': {'C': 1000, 'gamma': 1, 'kernel': 'linear', 'random_state': 1234}, 'accuracy': 0.6515151515151515, 'precision': 0.8518518518518519, 'recall': 0.6344827586206897, 'roc_auc': 0.6662979830839297, 'f1': 0.7272727272727273, 'f2': 0.6686046511627907}

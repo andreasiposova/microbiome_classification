@@ -5,7 +5,10 @@ import numpy as np
 from statistics import mean
 import os
 import pandas as pd
+from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import MinMaxScaler
+from sklearn import svm
+from sklearn import svm
 
 from utils import Config
 
@@ -24,7 +27,7 @@ from visualization import sensitivity_plot, grid_search_plot, get_rf_scores_para
 
 from data_loading import load_tsv_files
 
-from sklearn.ensemble import RandomForestClassifier
+#from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import make_scorer, accuracy_score, precision_score, recall_score, roc_auc_score, f1_score, fbeta_score, confusion_matrix
 from sklearn.model_selection import GridSearchCV
 
@@ -56,69 +59,55 @@ young_old_labels_path = 'data/Yang_PRJNA763023/SraRunTable.csv'
 def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, file_name, group):
     if group == "old":
         param_grid = {
-            'n_estimators': np.arange(5, 40, 5, dtype=int),
-            'max_depth': np.arange(4, 14, 2, dtype=int),
-            'min_samples_split': np.arange(2, 10, 2, dtype=int),
-            'min_samples_leaf': np.arange(2, 14, 4, dtype=int),
-            'max_features': ['sqrt', 'log2'],  # 'sqrt', 'log2'],
-            'random_state': [1234],
-            'class_weight': ['balanced_subsample']
-        }
+            'C': [1, 10, 100, 1000],
+            'gamma': [1, 0.5, 0.2, 0.1, 0.01, 0.001,0.00001],
+            'kernel': ['linear', 'rbf', 'poly'],
+            'random_state': [1234]
+            }
+
     if group == "young":
         param_grid = {
-            'n_estimators': np.arange(5, 35, 3, dtype=int),
-            'max_depth': np.arange(2, 23, 3, dtype=int),
-            'min_samples_split': np.arange(2, 12, 2, dtype=int),
-            'min_samples_leaf': np.arange(15, 40, 5, dtype=int),
-            'max_features': ['sqrt', 'log2'],  # 'sqrt', 'log2'],
-            'random_state': [1234],
-            'class_weight': ['balanced_subsample']
+            'C': [1, 10, 100, 1000],
+            'gamma': [1, 0.5, 0.2, 0.1, 0.01, 0.001,0.00001],
+            'kernel': ['linear', 'rbf', 'poly'],
+            'random_state': [1234]
         }
-        """
-        param_grid = {
-            'n_estimators': np.arange(3, 35, 3, dtype=int),
-            'max_depth': np.arange(2, 8, 1, dtype=int),
-            'min_samples_split': np.arange(2, 10, 2, dtype=int),
-            'min_samples_leaf': np.arange(2, 10, 2, dtype=int),
-            'max_features': ['sqrt', 'log2'],  # 'sqrt', 'log2'],
-            'random_state': [1234],
-            'class_weight': ['balanced_subsample']
-        }"""
 
     if group == "all":
         param_grid = {
-            'n_estimators': np.arange(5, 40, 5, dtype=int),
-            'max_depth': np.arange(4, 14, 2, dtype=int),
-            'min_samples_split': np.arange(2, 10, 2, dtype=int),
-            'min_samples_leaf': np.arange(2, 14, 4, dtype=int),
-            'max_features': ['sqrt', 'log2'],  # 'sqrt', 'log2'],
-            'random_state': [1234],
-            'class_weight': ['balanced_subsample']
+            'C': [0.1, 1, 10, 100, 1000],
+            'kernel': ['linear', 'poly', 'rbf', 'sigmoid'],
+            'degree': [2, 3, 4],
+            'gamma': ['scale', 'auto', 1, 0.5, 0.2, 0.1, 0.01, 0.001], #(np.logspace(-5, 2, 7)),
+            'shrinking': [True], #, False],
+            'probability': [True] #, False],
         }
 
     # Define the scoring methods
     scoring = {
         'roc_auc': make_scorer(roc_auc_score),
-        'accuracy': make_scorer(accuracy_score),
+        #'accuracy': make_scorer(accuracy_score)
         #'precision': make_scorer(accuracy_score),
-        'f1': make_scorer(f1_score)
+        #'f1': make_scorer(f1_score)
     }
 
     # initialize the classifier
-    rf = RandomForestClassifier(random_state=1234)
+    svc = svm.SVC(random_state = 1234)
+    #estimator = Pipeline([("model", model)])
+    print(svc.get_params().keys())
+    #svm_clf = model
     train_scores_gridsearch = []
     test_scores_gridsearch = []
 
     # Perform the grid search
-    grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=2, scoring=scoring, refit='roc_auc',
+    grid_search = GridSearchCV(estimator=svc, param_grid=param_grid, cv=10, scoring=scoring, refit='roc_auc',
                                return_train_score=True, n_jobs=-1)
-
     print(f"fitting GridSearch on {file_name}")
     grid_search.fit(X_train, y_train)
-    print("Evaluation")
+
     # Get the best estimator
     best_estimator = grid_search.best_estimator_
-    best_params_cv = grid_search.best_params_
+    best_params = grid_search.best_params_
     roc_auc_grid = grid_search.best_score_
     results = grid_search.cv_results_
 
@@ -126,16 +115,24 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
     train_scores_gridsearch = results.get('mean_train_roc_auc')
     test_scores_gridsearch = results.get('mean_test_roc_auc')
 
-    grid_search_train_test_plot(train_scores_gridsearch, test_scores_gridsearch, data_name, group, file_name, "RF")
+
+
+    # extract the train and test scores from the grid search
+    #train_scores_gridsearch = [grid_search.score(X_train, y_train) for _ in range(len(grid_search.cv_results_['params']))]
+    #test_scores_gridsearch = [grid_search.score(X_test, y_test) for _ in range(len(grid_search.cv_results_['params']))]
+    grid_search_train_test_plot(train_scores_gridsearch, test_scores_gridsearch, data_name, group, file_name, "SVM")
 
 
     test_scores = []
 
 
+    #for every combination of params, fit the model with those params to train set
+    #then evaluate on test set
+    #get the best model based on the test set
+    # later get that model and eval on validation set
     grid_val_scores = []
-
     for i in range(len(grid_search.cv_results_['params'])):
-        rf_ = RandomForestClassifier(**grid_search.cv_results_['params'][i])
+        rf_ = svm.SVC(**grid_search.cv_results_['params'][i])
         rf_.fit(X_train, y_train)
         y_pred = rf_.predict(X_val)
         accuracy = accuracy_score(y_val, y_pred)
@@ -158,20 +155,27 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
     # use that best model to evaluate on the huadong val set
 
     # find the test score respective to the highest roc_auc for the corresponding data file
+    #max_roc_auc = max(grid_val_scores, key=lambda x: x['roc_auc'])
+    #for i in range(len(grid_val_scores)):
+     #   keys = [k for k, v in grid_val_scores[i].items() if 0.8 <= v['roc_auc'] <= 0.9]
 
-    results_auroc = [d for d in grid_val_scores if 0.6 <= d['roc_auc'] <= 1.0]
+    results_auroc = [d for d in grid_val_scores if 0.5 <= d['roc_auc'] <= 1.0]
     best_auroc_params = max(results_auroc, key= lambda x: x['roc_auc'])
     best_params = best_auroc_params['params']
 
+    #get the params corresponding to the highest roc_auc on the test set (30% of the fudan cohort)
+    #max_params = max_roc_auc['params']
+    print("params with max roc_auc: ", results_auroc)
+    # Get the best estimator
+    #best estimator found by the gridsearch on train set only
 
-    #best_estimator_params_on_train = best_estimator.get_params()
+    best_estimator_params_on_train = best_estimator.get_params()
     train_scores = []
 
-    # get the scores for the fit on the train set
-    rf_best = RandomForestClassifier(**best_params)
-    rf_best.fit(X_train, y_train)
-
-    y_pred_train = rf_best.predict(X_train)
+    rf_best_train = svm.SVC(**best_params)
+    # Evaluate the best estimator on X_test and y_test
+    rf_best_train.fit(X_train, y_train)
+    y_pred_train = rf_best_train.predict(X_train)
     accuracy = accuracy_score(y_train, y_pred_train)
     precision = precision_score(y_train, y_pred_train)
     recall = recall_score(y_train, y_pred_train)
@@ -187,10 +191,16 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
                          'f2': f2}
 
     val_scores = []
-
+    #apply the best model params (chosen on the test set)
+    #predict on the validation set (huadong cohort)
+    #rf_best_test = RandomForestClassifier(**max_params)
+    #rf_best_test.fit(X_train, y_train)
+    #y_val_pred = rf_best_test.predict(X_val)
+    best_estimator_params_on_train = best_estimator.get_params()
 
     # Evaluate the best estimator on X_val and y_val - HUADONG Cohort
-    y_val_pred = rf_best.predict(X_val)
+    rf_best_train.fit(X_train, y_train)
+    y_val_pred = rf_best_train.predict(X_val)
 
     #compute the metrics on the validation set
     accuracy = accuracy_score(y_val, y_val_pred)
@@ -199,15 +209,19 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
     roc_auc = roc_auc_score(y_val, y_val_pred)
     f1 = f1_score(y_val, y_val_pred)
     f2 = fbeta_score(y_val, y_val_pred, beta=2)
-
+    #get all the params and scores on the validation set as a list (e.g.filename + best params found on the test set + validation score)
     val_scores.append({'file': file_name, 'params': best_params,
                             'accuracy': accuracy, 'precision': precision,
                             'recall': recall, 'roc_auc': roc_auc, 'f1': f1, 'f2': f2})
     best_val_eval = {'accuracy': accuracy, 'precision': precision, 'recall': recall, 'roc_auc': roc_auc, 'f1': f1, 'f2': f2}
 
+    # Get the best estimator
+    #best estimator found by the gridsearch on train set only
+    best_estimator_params_on_train = best_estimator.get_params()
+    rf_best_train = svm.SVC(**best_params)
     # Evaluate the best estimator on X_test and y_test
-
-    y_pred = rf_best.predict(X_test)
+    rf_best_train.fit(X_train, y_train)
+    y_pred = rf_best_train.predict(X_test)
     accuracy = accuracy_score(y_test, y_pred)
     precision = precision_score(y_test, y_pred)
     recall = recall_score(y_test, y_pred)
@@ -228,7 +242,7 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
 
 
 
-def visualize_results(test_scores, data_name, group, file_name, y_train, y_train_pred, y_test, y_pred, y_val, y_pred_val):
+def visualize_results(test_scores, data_name, file_name, group, y_train, y_train_pred, y_test, y_pred, y_val, y_pred_val):
     #rf_scores, rf_param_combinations, n_estimators_mean_metrics, max_depth_mean_metrics, max_features_mean_metrics, min_samples_split_mean_metrics, min_samples_leaf_mean_metrics, class_weight_mean_metrics  = get_rf_scores_params(test_scores)
     # Extract the parameter values
     #grid_search_plot(rf_param_combinations, rf_scores, data_name, file_name)
@@ -238,9 +252,9 @@ def visualize_results(test_scores, data_name, group, file_name, y_train, y_train
     #sensitivity_plot(min_samples_split_mean_metrics, data_name, file_name)
     #sensitivity_plot(min_samples_leaf_mean_metrics, data_name, file_name)
     #sensitivity_plot(class_weight_mean_metrics, data_name, file_name)
-    cm_plot(y_train, y_train_pred, data_name, group, file_name, "train", "RF")
-    cm_plot(y_test, y_pred, data_name, group, file_name, "test", "RF")
-    cm_plot(y_val, y_pred_val, data_name, group, file_name, "val", "RF")
+    cm_plot(y_train, y_train_pred, data_name, group, file_name, "train", "SVM")
+    cm_plot(y_test, y_pred, data_name, group, file_name, "test", "SVM")
+    cm_plot(y_val, y_pred_val, data_name, group, file_name, "val", "SVM")
 
 def create_results_table(full_results):
     df = pd.DataFrame(columns=['Group'])
@@ -341,8 +355,8 @@ def run_rf_tuning(data_name, filepath, group, select_features = True):
     X_val = X_val[common_cols_v]
     X_train = X_train[common_cols_t]
     X_test = X_test[common_cols_t]
-    X_train = X_train.append(X_test)
-    y_train = y_train + y_test
+    #X_train = X_train.append(X_test)
+    #y_train = y_train + y_test
     print("number of samples in training set: ", len(X_train))
     print("number of samples in test set: ", len(X_test))
     print("number of samples in validation set: ", len(X_val))
@@ -360,18 +374,18 @@ def run_rf_tuning(data_name, filepath, group, select_features = True):
         full_results_train.append(['selected_features', best_estimator, best_results_train])
         full_results_test.append(['selected_features', best_estimator, best_results_test])
         full_results_val.append(['selected_features', best_estimator, best_results_on_val])
-        visualize_results(scores, data_name, group, 'selected_features', y_train, y_train_pred, y_test, y_pred, y_val, y_val_pred)
+        visualize_results(scores, data_name, 'selected_features', group, y_train, y_train_pred, y_test, y_pred, y_val, y_val_pred)
 
     if select_features == False:
         full_results_train.append(['all_features', best_estimator, best_results_train])
         full_results_test.append(['all_features', best_estimator, best_results_test])
         full_results_val.append(['all_features', best_estimator, best_results_on_val])
-        visualize_results(scores, data_name, group, 'all_features', y_train, y_train_pred, y_test, y_pred,
+        visualize_results(scores, data_name, 'all_features', group, y_train, y_train_pred, y_test, y_pred,
                           y_val, y_val_pred)
 
     if not os.path.exists(str(Config.LOG_DIR) + "/" + str(data_name) + "/" + group + "/" + str(file_name)):
         os.makedirs(os.path.join(Config.LOG_DIR, data_name, group, file_name))
-    with open(os.path.join(Config.LOG_DIR, data_name, group, file_name, f"RF_best_params.txt"), "w") as f:
+    with open(os.path.join(Config.LOG_DIR, data_name, group, file_name, f"SVM_best_params.txt"), "w") as f:
         f.write(str(best_auroc_params))
 
     best_results_train = create_results_table(full_results_train)
@@ -386,23 +400,16 @@ def run_rf_tuning(data_name, filepath, group, select_features = True):
     results_val_table = results_val_table.append(best_results_val)
 #   results_test_table.drop(untuned_params, inplace=True, axis=1)
 #   results_val_table.drop(untuned_params, inplace=True, axis=1)
-    save_result_table(results_train_table, results_test_table, results_val_table, data_name, group, file_name, table_name="RF_best_results")
+    save_result_table(results_train_table, results_test_table, results_val_table, data_name, group, file_name, table_name="SVM_best_results")
     #save_result_table(results_test_table, data_name, file_name, group, table_name="best_results_test")
     #save_result_table(results_val_table, data_name, file_name, group, table_name="best_results_val")
 
-#run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='young', select_features=True)
-#run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='old', select_features=True)
-#run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='all', select_features=True)
-run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='young', select_features=False)
-#run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='old', select_features=False)
-#run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='all', select_features=False)
 
-"""
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_name', type=str, default=FUDAN)
     parser.add_argument('--filepath', type=str, default=fudan_filepath)
-    parser.add_argument('--group', type=str, default='young')
+    parser.add_argument('--group', type=str, default='all')
     parser.add_argument('--select_features', type=bool, default=True)
 
     args = parser.parse_args()
@@ -411,7 +418,7 @@ if __name__ == '__main__':
     select_features = args.select_features
 
     run_rf_tuning(data_name=args.data_name, filepath=args.filepath, group=args.group, select_features=args.select_features)
-    if group == 'young':
+    """if group == 'young':
         if select_features == True:
             run_rf_tuning(data_name=args.data_name, filepath=args.filepath, group="young", select_features=True)
         if select_features == False:

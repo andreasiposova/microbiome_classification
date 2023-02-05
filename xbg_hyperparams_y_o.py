@@ -13,6 +13,7 @@ import matplotlib
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 
+
 from feature_selection import calculate_feature_importance, select_features_from_paper
 from utils import setup_logging, Config
 from preprocessing import preprocess_data, preprocess_huadong, load_young_old_labels, preprocess_with_y_o_labels, \
@@ -23,11 +24,13 @@ from datetime import datetime
 from visualization import sensitivity_plot, grid_search_plot, get_rf_scores_params, cm_plot, grid_search_train_test_plot
 
 from data_loading import load_tsv_files
+import xgboost as xgb
 
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import make_scorer, accuracy_score, precision_score, recall_score, roc_auc_score, f1_score, fbeta_score, confusion_matrix
 from sklearn.model_selection import GridSearchCV
+import warnings
 
+warnings.filterwarnings("ignore")
 # Set up logging
 #logfile = setup_logging("tune_random_forest") # logger
 
@@ -56,44 +59,36 @@ young_old_labels_path = 'data/Yang_PRJNA763023/SraRunTable.csv'
 def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, file_name, group):
     if group == "old":
         param_grid = {
-            'n_estimators': np.arange(5, 40, 5, dtype=int),
-            'max_depth': np.arange(4, 14, 2, dtype=int),
-            'min_samples_split': np.arange(2, 10, 2, dtype=int),
-            'min_samples_leaf': np.arange(2, 14, 4, dtype=int),
-            'max_features': ['sqrt', 'log2'],  # 'sqrt', 'log2'],
-            'random_state': [1234],
-            'class_weight': ['balanced_subsample']
+            'n_estimators': np.arange(1, 30, 5, dtype=int),
+            'max_depth': np.arange(2, 20, 5, dtype=int),
+            'min_child_weight': np.arange(1, 11, 5, dtype=int),
+            'gamma': np.arange(0, 1.0, 0.1),
+            'random_state': [1234]
         }
     if group == "young":
         param_grid = {
-            'n_estimators': np.arange(5, 35, 3, dtype=int),
-            'max_depth': np.arange(2, 23, 3, dtype=int),
-            'min_samples_split': np.arange(2, 12, 2, dtype=int),
-            'min_samples_leaf': np.arange(15, 40, 5, dtype=int),
-            'max_features': ['sqrt', 'log2'],  # 'sqrt', 'log2'],
-            'random_state': [1234],
-            'class_weight': ['balanced_subsample']
+            'n_estimators': np.arange(5, 30, 5, dtype=int),
+            'max_depth': np.arange(2, 22, 10, dtype=int),
+            'min_child_weight': np.arange(1, 11, 5, dtype=int),
+            'gamma': np.arange(0, 1.0, 0.1),
+            'random_state': [1234]
         }
         """
         param_grid = {
-            'n_estimators': np.arange(3, 35, 3, dtype=int),
-            'max_depth': np.arange(2, 8, 1, dtype=int),
-            'min_samples_split': np.arange(2, 10, 2, dtype=int),
-            'min_samples_leaf': np.arange(2, 10, 2, dtype=int),
-            'max_features': ['sqrt', 'log2'],  # 'sqrt', 'log2'],
-            'random_state': [1234],
-            'class_weight': ['balanced_subsample']
+            'n_estimators': np.arange(1, 30, 5, dtype=int),
+            'max_depth': np.arange(2, 20, 5, dtype=int),
+            'min_child_weight': np.arange(1, 11, 5, dtype=int),
+            'gamma': np.arange(0, 1.0, 0.1),
+            'random_state': [1234]
         }"""
 
     if group == "all":
         param_grid = {
-            'n_estimators': np.arange(5, 40, 5, dtype=int),
-            'max_depth': np.arange(4, 14, 2, dtype=int),
-            'min_samples_split': np.arange(2, 10, 2, dtype=int),
-            'min_samples_leaf': np.arange(2, 14, 4, dtype=int),
-            'max_features': ['sqrt', 'log2'],  # 'sqrt', 'log2'],
-            'random_state': [1234],
-            'class_weight': ['balanced_subsample']
+            'n_estimators': np.arange(5, 30, 5, dtype=int),
+            'max_depth': np.arange(2, 22, 10, dtype=int),
+            'min_child_weight': np.arange(1, 11, 5, dtype=int),
+            'gamma': np.arange(0, 1.0, 0.1),
+            'random_state': [1234]
         }
 
     # Define the scoring methods
@@ -105,12 +100,13 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
     }
 
     # initialize the classifier
-    rf = RandomForestClassifier(random_state=1234)
+    model = xgb.XGBClassifier(verbose=0, silent=1, random_state=1234)
+    #rf = (random_state=1234)
     train_scores_gridsearch = []
     test_scores_gridsearch = []
 
     # Perform the grid search
-    grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=2, scoring=scoring, refit='roc_auc',
+    grid_search = GridSearchCV(estimator=model, param_grid=param_grid, cv=2, scoring=scoring, refit='roc_auc',
                                return_train_score=True, n_jobs=-1)
 
     print(f"fitting GridSearch on {file_name}")
@@ -135,9 +131,9 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
     grid_val_scores = []
 
     for i in range(len(grid_search.cv_results_['params'])):
-        rf_ = RandomForestClassifier(**grid_search.cv_results_['params'][i])
-        rf_.fit(X_train, y_train)
-        y_pred = rf_.predict(X_val)
+        xgb_ = xgb.XGBClassifier(**grid_search.cv_results_['params'][i])
+        xgb_.fit(X_train, y_train)
+        y_pred = xgb_.predict(X_val)
         accuracy = accuracy_score(y_val, y_pred)
         precision = precision_score(y_val, y_pred)
         recall = recall_score(y_val, y_pred)
@@ -168,10 +164,10 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
     train_scores = []
 
     # get the scores for the fit on the train set
-    rf_best = RandomForestClassifier(**best_params)
-    rf_best.fit(X_train, y_train)
+    xgb_best = xgb.XGBClassifier(**best_params)
+    xgb_best.fit(X_train, y_train)
 
-    y_pred_train = rf_best.predict(X_train)
+    y_pred_train = xgb_best.predict(X_train)
     accuracy = accuracy_score(y_train, y_pred_train)
     precision = precision_score(y_train, y_pred_train)
     recall = recall_score(y_train, y_pred_train)
@@ -190,7 +186,7 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
 
 
     # Evaluate the best estimator on X_val and y_val - HUADONG Cohort
-    y_val_pred = rf_best.predict(X_val)
+    y_val_pred = xgb_best.predict(X_val)
 
     #compute the metrics on the validation set
     accuracy = accuracy_score(y_val, y_val_pred)
@@ -207,7 +203,7 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
 
     # Evaluate the best estimator on X_test and y_test
 
-    y_pred = rf_best.predict(X_test)
+    y_pred = xgb_best.predict(X_test)
     accuracy = accuracy_score(y_test, y_pred)
     precision = precision_score(y_test, y_pred)
     recall = recall_score(y_test, y_pred)
@@ -238,9 +234,9 @@ def visualize_results(test_scores, data_name, group, file_name, y_train, y_train
     #sensitivity_plot(min_samples_split_mean_metrics, data_name, file_name)
     #sensitivity_plot(min_samples_leaf_mean_metrics, data_name, file_name)
     #sensitivity_plot(class_weight_mean_metrics, data_name, file_name)
-    cm_plot(y_train, y_train_pred, data_name, group, file_name, "train", "RF")
-    cm_plot(y_test, y_pred, data_name, group, file_name, "test", "RF")
-    cm_plot(y_val, y_pred_val, data_name, group, file_name, "val", "RF")
+    cm_plot(y_train, y_train_pred, data_name, group, file_name, "train", "XGB")
+    cm_plot(y_test, y_pred, data_name, group, file_name, "test", "XGB")
+    cm_plot(y_val, y_pred_val, data_name, group, file_name, "val", "XGB")
 
 def create_results_table(full_results):
     df = pd.DataFrame(columns=['Group'])
@@ -371,7 +367,7 @@ def run_rf_tuning(data_name, filepath, group, select_features = True):
 
     if not os.path.exists(str(Config.LOG_DIR) + "/" + str(data_name) + "/" + group + "/" + str(file_name)):
         os.makedirs(os.path.join(Config.LOG_DIR, data_name, group, file_name))
-    with open(os.path.join(Config.LOG_DIR, data_name, group, file_name, f"RF_best_params.txt"), "w") as f:
+    with open(os.path.join(Config.LOG_DIR, data_name, group, file_name, f"XGB_best_params.txt"), "w") as f:
         f.write(str(best_auroc_params))
 
     best_results_train = create_results_table(full_results_train)
@@ -386,14 +382,14 @@ def run_rf_tuning(data_name, filepath, group, select_features = True):
     results_val_table = results_val_table.append(best_results_val)
 #   results_test_table.drop(untuned_params, inplace=True, axis=1)
 #   results_val_table.drop(untuned_params, inplace=True, axis=1)
-    save_result_table(results_train_table, results_test_table, results_val_table, data_name, group, file_name, table_name="RF_best_results")
+    save_result_table(results_train_table, results_test_table, results_val_table, data_name, group, file_name, table_name="XGB_best_results")
     #save_result_table(results_test_table, data_name, file_name, group, table_name="best_results_test")
     #save_result_table(results_val_table, data_name, file_name, group, table_name="best_results_val")
 
 #run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='young', select_features=True)
 #run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='old', select_features=True)
-#run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='all', select_features=True)
-run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='young', select_features=False)
+run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='all', select_features=True)
+#run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='young', select_features=False)
 #run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='old', select_features=False)
 #run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='all', select_features=False)
 

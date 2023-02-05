@@ -65,7 +65,7 @@ def get_rf_scores_params(test_scores):
     return scores, param_combinations, n_estimators_mean_metrics, max_depth_mean_metrics, max_features_mean_metrics, min_samples_leaf_mean_metrics, min_samples_split_mean_metrics, class_weight_mean_metrics
 
 
-def grid_search_plot(hyperparam, scores, data_name, file_name):
+def grid_search_plot(hyperparam, scores, data_name, group, file_name):
     accuracy_values = scores[0]
     precision_values = scores[1]
     recall_values = scores[2]
@@ -73,8 +73,8 @@ def grid_search_plot(hyperparam, scores, data_name, file_name):
     f1_values = scores[4]
     f2_values = scores[5]
 
-    if not os.path.exists(str(Config.PLOTS_DIR) + "/" + str(data_name) + "/" + str(file_name)):
-        os.makedirs(os.path.join(Config.PLOTS_DIR, data_name, file_name))
+    if not os.path.exists(str(Config.PLOTS_DIR) + "/" + str(data_name) + "/" + str(group) +"/"+ str(file_name)):
+        os.makedirs(os.path.join(Config.PLOTS_DIR, data_name, group, file_name))
 
     plt.figure(figsize=(7, 5))
     plt.plot(hyperparam, accuracy_values, label='Accuracy')
@@ -93,7 +93,7 @@ def grid_search_plot(hyperparam, scores, data_name, file_name):
     #plt.show()
 
 
-def sensitivity_plot(hp_mean_metrics, data_name, file_name):
+def sensitivity_plot(hp_mean_metrics, data_name, group, file_name):
     columns = hp_mean_metrics.columns
     columns_list = [col for col in columns]
     hyperparam_name = columns_list[0]
@@ -104,8 +104,8 @@ def sensitivity_plot(hp_mean_metrics, data_name, file_name):
     # values = hp_mean_metrics.Series.values.to_list()
     # values_list = [val for val in values]
 
-    if not os.path.exists(str(Config.PLOTS_DIR) + "/" + str(data_name) + "/" + str(file_name)):
-        os.makedirs(os.path.join(Config.PLOTS_DIR, data_name, file_name))
+    if not os.path.exists(str(Config.PLOTS_DIR) + "/" + str(data_name) + "/" + group + "/" + str(file_name)):
+        os.makedirs(os.path.join(Config.PLOTS_DIR, data_name, group, file_name))
 
     plt.figure(figsize=(7, 5))
     plt.plot(scores[0], scores[1], label='Accuracy')
@@ -125,7 +125,7 @@ def sensitivity_plot(hp_mean_metrics, data_name, file_name):
     #plt.show()
 
 
-def cm_plot(y_test, y_pred, data_name, group, file_name, test_or_val):
+def cm_plot(y_test, y_pred, data_name, group, file_name, test_or_val, clf_name):
     if not os.path.exists(str(Config.PLOTS_DIR) + "/" + str(data_name) + "/" + group + "/" + str(file_name)):
         os.makedirs(os.path.join(Config.PLOTS_DIR, data_name, group, file_name))
 
@@ -139,18 +139,18 @@ def cm_plot(y_test, y_pred, data_name, group, file_name, test_or_val):
     disp = ConfusionMatrixDisplay(cm, display_labels=labels)
     disp.plot()
     plt.title(file_name)
-    plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, group, file_name, f"rf_best_estimator_{test_or_val}_cm.png"))
+    plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, group, file_name, f"{clf_name}_best_estimator_{test_or_val}_cm.png"))
     #plt.show()
 
-def grid_search_train_test_plot(train_scores, test_scores, data_name, group):
+def grid_search_train_test_plot(train_scores, test_scores, data_name, group, file_name, clf_name):
     # plot the train and test scores
-    if not os.path.exists(str(Config.PLOTS_DIR) + "/" + str(data_name) + "/" + group):
-        os.makedirs(os.path.join(Config.PLOTS_DIR, data_name, group))
+    if not os.path.exists(str(Config.PLOTS_DIR) + "/" + str(data_name) + "/" + group + "/" + file_name):
+        os.makedirs(os.path.join(Config.PLOTS_DIR, data_name, group, file_name))
     plt.plot(train_scores, label='train score')
     plt.plot(test_scores, label='test score')
     plt.title('GridSearch CV Train vs. Test score')
     plt.legend()
-    plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, group, f"rf_grid_search_scores.png"))
+    plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, group, file_name, f"{clf_name}_grid_search_scores.png"))
 
 
 def create_scores_dataframe(grid_clf, param_name, num_results=15, negative=True, graph=True, display_all_params=True):
