@@ -6,33 +6,33 @@ from sklearn.preprocessing import MinMaxScaler
 
 from feature_selection import select_features_from_paper
 from utils import setup_logging, Config
-from preprocessing import preprocess_data, preprocess_huadong, full_preprocessing_y_o_labels
+from preprocessing import preprocess_data, preprocess_huadong, full_preprocessing_y_o_labels, preprocess_with_y_o_labels
 
 from datetime import datetime
 from data_loading import load_tsv_files, load_young_old_labels
 
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import make_scorer, accuracy_score, precision_score, recall_score, roc_auc_score, f1_score, \
+#from sklearn.ensemble import RandomForestClassifier
+import xgboost as xgb
+from sklearn.metrics import accuracy_score, precision_score, recall_score, roc_auc_score, f1_score, \
     fbeta_score
-from sklearn.model_selection import GridSearchCV, RepeatedStratifiedKFold, cross_validate
+from sklearn.model_selection import RepeatedStratifiedKFold, cross_validate
 from sklearn.base import clone
 from sklearn.pipeline import Pipeline
-import xgboost as xgb
 
 import matplotlib
-
-
-
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
-from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix
+
+
+import warnings
+warnings.filterwarnings("ignore")
 
 # Set up logging
 # logfile = setup_logging("tune_random_forest") # logger
 
 # Set up logging
-logger = setup_logging("tune_random_forest")
-log_file = "rf" + "_" + datetime.now().strftime("%Y%m%d_%H%M%S")
+#logger = setup_logging("tune_random_forest")
+#log_file = "rf" + "_" + datetime.now().strftime("%Y%m%d_%H%M%S")
 
 FUDAN = 'fudan'
 HUADONG1 = 'huadong1'
@@ -74,10 +74,7 @@ def calculate_performance(y_true, y_pred):
 
     return accuracies, precisions, recalls, roc_aucs, f1s, f2s
 
-
-
-
-def sensitivity_analysis(data_name, filepath, group, select_features = True):
+def sensitivity_analysis(data_name, filepath, group, select_features = False):
     full_results = []
     y_o_labels = load_young_old_labels(young_old_labels_path)
     data = load_tsv_files(filepath)
@@ -98,12 +95,7 @@ def sensitivity_analysis(data_name, filepath, group, select_features = True):
                 X_val_1 = pd.concat([X_h1, X_h2])
                 y_val = y_h1 + y_h2
             elif group == 'young' or group == 'old':
-                X_train_1, X_test_1, X_val_1, y_train, y_test, y_val = full_preprocessing_y_o_labels(data,
-                                                                                                     huadong_data1,
-                                                                                                     huadong_data2, key,
-                                                                                                     yang_metadata_path,
-                                                                                                     young_old_labels_path,
-                                                                                                     group)
+                X_train_1, X_test_1, X_val_1, y_train, y_test, y_val = full_preprocessing_y_o_labels(data, huadong_data1, huadong_data2, key, yang_metadata_path, young_old_labels_path, group)
 
             if select_features == False:
                 file_name = "all_features"
@@ -138,8 +130,16 @@ def sensitivity_analysis(data_name, filepath, group, select_features = True):
     X_val = X_val[common_cols_v]
     X_train = X_train[common_cols_t]
     X_test = X_test[common_cols_t]
-    # X_train = X_train.append(X_test)
-    # y_train = y_train + y_test
+    X_train = X_train.append(X_test)
+    y_train = y_train + y_test
+
+    t_unique_values, t_counts = np.unique(y_train, return_counts=True)
+    v_unique_values, v_counts = np.unique(y_val, return_counts=True)
+    print("Unique values: ", t_unique_values)
+    print("Counts: ", t_counts)
+    print("Unique values: ", v_unique_values)
+    print("Counts: ", v_counts)
+
 
     scaler = MinMaxScaler()
     scaler.fit(X_train)
@@ -150,17 +150,38 @@ def sensitivity_analysis(data_name, filepath, group, select_features = True):
     print('Number of test samples :', len(X_test))
     print('Number of validation samples :', len(X_val))
 
-
-    model = xgb.XGBClassifier(n_estimators=5, verbose=0, silent=True, random_state=1234)
     # define estimator
-    estimator = Pipeline([("model", model)])
-    param_ranges = {
-        'n_estimators': np.arange(1, 30, 2, dtype=int),
-        'max_depth': np.arange(2, 20, 2, dtype=int),
-        #'min_child_weight': np.arange(1, 10, 5, dtype=int),
-        'gamma': np.arange(0, 1.0, 0.1),
-        'random_state': [1234]
-    }
+    estimator = Pipeline([("model", xgb.XGBClassifier(random_state=1234))])
+    # define a range of values for the maximum depth
+    if group == "old":
+        param_ranges = {
+            'n_estimators': np.arange(5, 40, 10, dtype=int),
+            'max_depth': np.arange(2, 16, 4, dtype=int),
+            'min_child_weight': np.arange(1, 27, 5, dtype=int),
+            'gamma': np.arange(0, 1.0, 0.2),
+            'random_state': [1234]
+        }
+    if group == "young":
+        param_ranges = {
+            'n_estimators': np.arange(5, 40, 10, dtype=int),
+            'max_depth': np.arange(2, 16, 4, dtype=int),
+            'min_child_weight': np.arange(1, 27, 5, dtype=int),
+            'gamma': np.arange(0, 1.0, 0.2),
+            'random_state': [1234]
+        }
+    if group == "all":
+        param_ranges = {
+            'n_estimators': np.arange(5, 40, 10, dtype=int),
+            'max_depth': np.arange(2, 16, 4, dtype=int),
+            'min_child_weight': np.arange(1, 27, 5, dtype=int),
+            'gamma': np.arange(0, 1.0, 0.2),
+            'random_state': [1234]
+        }
+    if select_features == True:
+        print(f"Experiments on {group} samples, with feature selection")
+    if select_features == False:
+        print(f"Experiments on {group} samples, without feature selection")
+
 
     # initialize an empty list to store the performance scores
     scores = []
@@ -256,7 +277,7 @@ def sensitivity_analysis(data_name, filepath, group, select_features = True):
         else:
             x = param_ranges[param]
         plt.plot(x, roc_aucs_train, label="Train")
-        plt.plot(x, roc_aucs_test, label="Test")
+        #plt.plot(x, roc_aucs_test, label="Test")
         plt.plot(x, roc_aucs_val, label="Validation")
         plt.plot(x, roc_aucs_cv, label="CV mean")
         plt.xlabel(param)
@@ -278,20 +299,27 @@ def sensitivity_analysis(data_name, filepath, group, select_features = True):
                 os.path.join(
                     os.path.join(Config.PLOTS_DIR, data_name, group, f"all_features/XGB_{param}_roc_auc.png")))
 
-sensitivity_analysis(FUDAN, fudan_filepath, group="young", select_features=True)
+#sensitivity_analysis(FUDAN, fudan_filepath, group="young", select_features=True)
+#sensitivity_analysis(FUDAN, fudan_filepath, group="old", select_features=True)
+sensitivity_analysis(FUDAN, fudan_filepath, group="all", select_features=True)
+#sensitivity_analysis(FUDAN, fudan_filepath, group="young", select_features=False)
+#sensitivity_analysis(FUDAN, fudan_filepath, group="old", select_features=False)
+#sensitivity_analysis(FUDAN, fudan_filepath, group="all", select_features=False)
 
-
+"""
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_name', type=str, default=FUDAN)
     parser.add_argument('--filepath', type=str, default=fudan_filepath)
-    parser.add_argument('--group', type=str, default="old")
+    parser.add_argument('--group', type=str, default="all")
+    parser.add_argument('--select_features', type=str, default=False)
 
     args = parser.parse_args()
     data_name = args.data_name
     if data_name == FUDAN:
-        sensitivity_analysis(data_name=args.data_name, filepath=args.filepath, group = "young")
+        sensitivity_analysis(data_name=args.data_name, filepath=args.filepath, group="all", select_features=False)
     elif data_name == HUADONG1:
         sensitivity_analysis(data_name=args.data_name, filepath=args.filepath)
     else:
         raise ValueError()
+"""

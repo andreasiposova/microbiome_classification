@@ -59,18 +59,18 @@ young_old_labels_path = 'data/Yang_PRJNA763023/SraRunTable.csv'
 def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, file_name, group):
     if group == "old":
         param_grid = {
-            'n_estimators': np.arange(1, 30, 5, dtype=int),
-            'max_depth': np.arange(2, 20, 5, dtype=int),
-            'min_child_weight': np.arange(1, 11, 5, dtype=int),
-            'gamma': np.arange(0, 1.0, 0.1),
+            'n_estimators': np.arange(5, 27, 2, dtype=int),
+            'max_depth': np.arange(4, 12, 2, dtype=int),
+            'min_child_weight': np.arange(8, 20, 3, dtype=int),
+            'gamma': np.arange(0.2, 0.6, 0.1),
             'random_state': [1234]
         }
     if group == "young":
         param_grid = {
-            'n_estimators': np.arange(5, 30, 5, dtype=int),
-            'max_depth': np.arange(2, 22, 10, dtype=int),
-            'min_child_weight': np.arange(1, 11, 5, dtype=int),
-            'gamma': np.arange(0, 1.0, 0.1),
+            'n_estimators': np.arange(5, 27, 2, dtype=int),
+            'max_depth': np.arange(2, 22, 4, dtype=int),
+            'min_child_weight': np.arange(1, 15, 3, dtype=int),
+            'gamma': np.arange(0.2, 2.0, 0.2),
             'random_state': [1234]
         }
         """
@@ -84,10 +84,10 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
 
     if group == "all":
         param_grid = {
-            'n_estimators': np.arange(5, 30, 5, dtype=int),
-            'max_depth': np.arange(2, 22, 10, dtype=int),
-            'min_child_weight': np.arange(1, 11, 5, dtype=int),
-            'gamma': np.arange(0, 1.0, 0.1),
+            'n_estimators': np.arange(5, 38, 3, dtype=int),
+            'max_depth': np.arange(2, 22, 4, dtype=int),
+            'min_child_weight': np.arange(1, 15, 3, dtype=int),
+            'gamma': np.arange(0, 1.5, 0.1),
             'random_state': [1234]
         }
 
@@ -96,17 +96,17 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
         'roc_auc': make_scorer(roc_auc_score),
         'accuracy': make_scorer(accuracy_score),
         #'precision': make_scorer(accuracy_score),
-        'f1': make_scorer(f1_score)
+        #'f1': make_scorer(f1_score)
     }
 
     # initialize the classifier
-    model = xgb.XGBClassifier(verbose=0, silent=1, random_state=1234)
+    model = xgb.XGBClassifier(silent=1, random_state=1234)
     #rf = (random_state=1234)
     train_scores_gridsearch = []
     test_scores_gridsearch = []
 
     # Perform the grid search
-    grid_search = GridSearchCV(estimator=model, param_grid=param_grid, cv=2, scoring=scoring, refit='roc_auc',
+    grid_search = GridSearchCV(estimator=model, param_grid=param_grid, cv=3, scoring=scoring, refit='roc_auc',
                                return_train_score=True, n_jobs=-1)
 
     print(f"fitting GridSearch on {file_name}")
@@ -386,12 +386,12 @@ def run_rf_tuning(data_name, filepath, group, select_features = True):
     #save_result_table(results_test_table, data_name, file_name, group, table_name="best_results_test")
     #save_result_table(results_val_table, data_name, file_name, group, table_name="best_results_val")
 
-#run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='young', select_features=True)
-#run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='old', select_features=True)
+run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='young', select_features=True)
+run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='old', select_features=True)
 run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='all', select_features=True)
-#run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='young', select_features=False)
-#run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='old', select_features=False)
-#run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='all', select_features=False)
+run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='young', select_features=False)
+run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='old', select_features=False)
+run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='all', select_features=False)
 
 """
 if __name__ == '__main__':

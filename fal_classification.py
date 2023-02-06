@@ -36,8 +36,8 @@ young_old_labels_path = 'data/Yang_PRJNA763023/SraRunTable.csv'
 
 
 
-def get_best_params(data_name, group, file_name, param_file = 'best_params'):
-    with open(os.path.join(Config.LOG_DIR, data_name, group, file_name, f"{param_file}.txt"), "rb") as f:
+def get_best_params(data_name, group, file_name, clf, param_file = 'best_params'):
+    with open(os.path.join(Config.LOG_DIR, data_name, group, file_name, f"{clf}_{param_file}.txt"), "rb") as f:
         params = f.read()
         params = ast.literal_eval(params.decode())
         params = params['params']
@@ -99,8 +99,8 @@ def load_preprocessed_data(data_name=FUDAN, filepath=fudan_filepath, group='old'
     X_val = X_val[common_cols_v]
     X_train = X_train[common_cols_t]
     X_test = X_test[common_cols_t]
-    #X_train = X_train.append(X_test)
-    #y_train = y_train + y_test
+    X_train = X_train.append(X_test)
+    y_train = y_train + y_test
     print("number of samples in training set: ", len(X_train))
     print("number of samples in test set: ", len(X_test))
     print("number of samples in validation set: ", len(X_val))
@@ -116,13 +116,10 @@ def load_preprocessed_data(data_name=FUDAN, filepath=fudan_filepath, group='old'
 
     return X_train, X_test, X_val, y_train, y_test, y_val
 
-def perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, params, file_name, group):
-    full_results_train = []
-    full_results_test = []
-    full_results_val = []
+def perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, params, group, file_name):
+
     results_df = pd.DataFrame()
-    results_test_table = pd.DataFrame()
-    results_val_table = pd.DataFrame()
+
 
     clf = RandomForestClassifier(**params)
     #clf.fit(X_train, y_train)
@@ -130,16 +127,21 @@ def perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, pa
     #y_test_pred = clf.predict(X_test)
     #y_val_pred = clf.predict(X_val)
     threshold = 0.515
-    predictions = []
+    predictions_crc = pd.DataFrame()
+    predictions_h = pd.DataFrame()
     n_runs = 10
+    train_results = pd.DataFrame()
+    # test_results = pd.DataFrame()
+    val_results = pd.DataFrame()
     for i in range(n_runs):
-        train_results = pd.DataFrame()
-        test_results = pd.DataFrame()
-        val_results = pd.DataFrame()
-        clf.fit(X_train, y_train)
-        predictions.append(clf.predict_proba(X_train))
 
-    predictions = predictions[1] #get the average prediction (take always the first column
+        clf.fit(X_train, y_train)
+        pred = clf.predict_proba(X_train)
+        predictions_crc.append(pred[:,-1]) #append only probabilities of cancer
+        predictions_h.append(pred[:, 0:1]) #append only probabilities of health
+        #then compute the mean of the row to get the mean probability of cancer/health
+
+    #predictions = predictions[1] #get the average prediction (take always the first column
     #from each run, and then per sample, take average of those 10 values
     # #then this can be used as y_pred)
     #or take both columns and use as y_train_prob and then transform to y_train_pred
@@ -151,9 +153,9 @@ def perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, pa
     plot_conf_int(y_train, y_train_prob, X_train, X_train, clf, data_name=FUDAN, file_name=file_name, group=group, set_name="train")
 
 
-    y_test_prob = clf.predict_proba(X_test)
-    y_test_pred = (y_test_prob[:, 1] >= threshold).astype('int')
-    plot_conf_int(y_test, y_test_prob, X_train, X_test, clf, data_name=FUDAN, file_name=file_name, group=group, set_name="test")
+    #y_test_prob = clf.predict_proba(X_test)
+    #y_test_pred = (y_test_prob[:, 1] >= threshold).astype('int')
+    #plot_conf_int(y_test, y_test_prob, X_train, X_test, clf, data_name=FUDAN, file_name=file_name, group=group, set_name="test")
 
     y_val_prob = clf.predict_proba(X_val)
     y_val_pred = (y_val_prob[:, 1] >= threshold).astype('int')
@@ -174,20 +176,20 @@ def perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, pa
     train_results = train_results.append(train_set_res, ignore_index=True)
 
 
-    acc_test = accuracy_score(y_test, y_test_pred)
-    prec_test = precision_score(y_test, y_test_pred)
-    recall_test = recall_score(y_test, y_test_pred)
-    roc_auc_test = roc_auc_score(y_test, y_test_pred)
-    f1_test = f1_score(y_test, y_test_pred)
-    f2_test = fbeta_score(y_test, y_test_pred, beta=2)
-    interval_len = 1.96 * sqrt((roc_auc_test * (1 - roc_auc_test)) / len(y_test))
-    interval_low = roc_auc_test - interval_len
-    interval_high = roc_auc_test + interval_len
-    ci_test = [interval_low, interval_high]
-    test_set_res = {'accuracy': acc_test, 'precision': prec_test, 'recall': recall_test,
-                          'roc_auc': roc_auc_test, 'f1': f1_test,
-                          'f2': f2_test, 'auc_conf_int': ci_test}
-    test_results = test_results.append(test_set_res, ignore_index=True)
+    #acc_test = accuracy_score(y_test, y_test_pred)
+    #prec_test = precision_score(y_test, y_test_pred)
+    #recall_test = recall_score(y_test, y_test_pred)
+    #roc_auc_test = roc_auc_score(y_test, y_test_pred)
+    #f1_test = f1_score(y_test, y_test_pred)
+    #f2_test = fbeta_score(y_test, y_test_pred, beta=2)
+    #interval_len = 1.96 * sqrt((roc_auc_test * (1 - roc_auc_test)) / len(y_test))
+    #interval_low = roc_auc_test - interval_len
+    #interval_high = roc_auc_test + interval_len
+    #ci_test = [interval_low, interval_high]
+    #test_set_res = {'accuracy': acc_test, 'precision': prec_test, 'recall': recall_test,
+     #                     'roc_auc': roc_auc_test, 'f1': f1_test,
+     #                     'f2': f2_test, 'auc_conf_int': ci_test}
+    #test_results = test_results.append(test_set_res, ignore_index=True)
 
 
     acc_val = accuracy_score(y_val, y_val_pred)
@@ -206,11 +208,11 @@ def perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, pa
     val_results = val_results.append(val_set_res, ignore_index=True)
 
     train_results = train_results.mean()
-    test_results = test_results.mean()
+    #test_results = test_results.mean()
     val_results = val_results.mean()
 
     results_df = results_df.append(train_results, ignore_index=True)
-    results_df = results_df.append(test_results, ignore_index=True)
+    #results_df = results_df.append(test_results, ignore_index=True)
     results_df = results_df.append(val_results, ignore_index=True)
 
     return results_df
@@ -218,18 +220,18 @@ def perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, pa
 
 
 
-def get_all_results(data_name, filepath, group, select_features=True, fal=True):
+def get_rf_results(data_name, filepath, group, select_features, clf, fal):
     X_train, X_test, X_val, y_train, y_test, y_val = load_preprocessed_data(FUDAN, fudan_filepath, group='old', select_features=True)
     if select_features == True:
-        params = get_best_params(FUDAN, group, 'selected_features', param_file='best_params')
+        params = get_best_params(FUDAN, group, 'selected_features', clf, param_file='best_params')
         if fal == True:
             X_train = apply_feature_abundance_limits(X_train)
             X_test = apply_feature_abundance_limits(X_test)
             X_val = apply_feature_abundance_limits(X_val)
-            results = perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, params, file_name="selected_features", group=group)
+            results = perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, params, group=group, file_name="selected_features")
             print(results)
         if fal == False:
-            results = perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, params, file_name="selected_features", group=group)
+            results = perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, params, group=group, file_name="selected_features")
             print(results)
     if select_features == False:
         params = get_best_params(FUDAN, group, 'all_features', param_file='best_params')
@@ -237,10 +239,10 @@ def get_all_results(data_name, filepath, group, select_features=True, fal=True):
             X_train = apply_feature_abundance_limits(X_train)
             X_test = apply_feature_abundance_limits(X_test)
             X_val = apply_feature_abundance_limits(X_val)
-            results = perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, params, file_name="all_features", group=group)
+            results = perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, params, group=group, file_name="all_features")
             print(results)
         if fal == False:
-            results = perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, params, file_name="all_features", group=group)
+            results = perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, params, group=group, file_name="all_features")
             print(results)
 
-get_all_results(FUDAN, fudan_filepath, 'old', select_features=True, fal=True)
+get_rf_results(FUDAN, fudan_filepath, 'old', select_features=True, clf = "RF", fal=True)
