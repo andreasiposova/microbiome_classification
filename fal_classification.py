@@ -133,19 +133,17 @@ def perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, pa
     train_results = pd.DataFrame()
     # test_results = pd.DataFrame()
     val_results = pd.DataFrame()
-    for i in range(n_runs):
+    #for i in range(n_runs):
 
-        clf.fit(X_train, y_train)
-        pred = clf.predict_proba(X_train)
-        predictions_crc.append(pred[:,-1]) #append only probabilities of cancer
-        predictions_h.append(pred[:, 0:1]) #append only probabilities of health
-        #then compute the mean of the row to get the mean probability of cancer/health
-
-    #predictions = predictions[1] #get the average prediction (take always the first column
-    #from each run, and then per sample, take average of those 10 values
-    # #then this can be used as y_pred)
-    #or take both columns and use as y_train_prob and then transform to y_train_pred
-
+    clf.fit(X_train, y_train)
+    pred = clf.predict_proba(X_train)
+    #prob_crc = pred[:,-1]
+    #df_crc = pd.DataFrame(prob_crc)
+    #predictions_crc = predictions_crc.append(df_crc, ignore_index=False)
+    #predictions_crc = pd.concat([predictions_crc, df_crc], axis=1)
+    #prob_h = pred[:,0:1]
+    #df_h = pd.DataFrame(prob_h)
+    #predictions_h = pd.concat([predictions_h, df_h], axis=1)#predictions_h = predictions_h.append(df_h, ignore_index=False)
 
 
     y_train_prob = clf.predict_proba(X_train)
@@ -217,10 +215,107 @@ def perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, pa
 
     return results_df
 
+def perform_classification():
+
+    results_df = pd.DataFrame()
+
+    clf = RandomForestClassifier(**params)
+    #clf.fit(X_train, y_train)
+    #y_train_pred = clf.predict(X_train)
+    #y_test_pred = clf.predict(X_test)
+    #y_val_pred = clf.predict(X_val)
+    threshold = 0.515
+    predictions_crc = pd.DataFrame()
+    predictions_h = pd.DataFrame()
+    n_runs = 10
+    train_results = pd.DataFrame()
+    # test_results = pd.DataFrame()
+    val_results = pd.DataFrame()
+    #for i in range(n_runs):
+
+    clf.fit(X_train, y_train)
+    pred = clf.predict_proba(X_train)
+    #prob_crc = pred[:,-1]
+    #df_crc = pd.DataFrame(prob_crc)
+    #predictions_crc = predictions_crc.append(df_crc, ignore_index=False)
+    #predictions_crc = pd.concat([predictions_crc, df_crc], axis=1)
+    #prob_h = pred[:,0:1]
+    #df_h = pd.DataFrame(prob_h)
+    #predictions_h = pd.concat([predictions_h, df_h], axis=1)#predictions_h = predictions_h.append(df_h, ignore_index=False)
+
+
+    y_train_prob = clf.predict_proba(X_train)
+    y_train_pred = (y_train_prob[:, 1] >= threshold).astype('int')
 
 
 
-def get_rf_results(data_name, filepath, group, select_features, clf, fal):
+    #y_test_prob = clf.predict_proba(X_test)
+    #y_test_pred = (y_test_prob[:, 1] >= threshold).astype('int')
+
+    y_val_prob = clf.predict_proba(X_val)
+    y_val_pred = (y_val_prob[:, 1] >= threshold).astype('int')
+
+
+    acc_train = accuracy_score(y_train, y_train_pred)
+    prec_train = precision_score(y_train, y_train_pred)
+    recall_train = recall_score(y_train, y_train_pred)
+    roc_auc_train = roc_auc_score(y_train, y_train_pred)
+    f1_train = f1_score(y_train, y_train_pred)
+    f2_train = fbeta_score(y_train, y_train_pred, beta=2)
+    interval_len = 1.96 * sqrt((roc_auc_train * (1 - roc_auc_train)) / len(y_train))
+    interval_low = roc_auc_train - interval_len
+    interval_high = roc_auc_train + interval_len
+    ci_train = [interval_low, interval_high]
+    train_set_res = {'accuracy': acc_train, 'precision': prec_train, 'recall': recall_train, 'roc_auc': roc_auc_train, 'f1': f1_train,
+                          'f2': f2_train, 'auc_conf_int': ci_train}
+    train_results = train_results.append(train_set_res, ignore_index=True)
+
+
+    #acc_test = accuracy_score(y_test, y_test_pred)
+    #prec_test = precision_score(y_test, y_test_pred)
+    #recall_test = recall_score(y_test, y_test_pred)
+    #roc_auc_test = roc_auc_score(y_test, y_test_pred)
+    #f1_test = f1_score(y_test, y_test_pred)
+    #f2_test = fbeta_score(y_test, y_test_pred, beta=2)
+    #interval_len = 1.96 * sqrt((roc_auc_test * (1 - roc_auc_test)) / len(y_test))
+    #interval_low = roc_auc_test - interval_len
+    #interval_high = roc_auc_test + interval_len
+    #ci_test = [interval_low, interval_high]
+    #test_set_res = {'accuracy': acc_test, 'precision': prec_test, 'recall': recall_test,
+     #                     'roc_auc': roc_auc_test, 'f1': f1_test,
+     #                     'f2': f2_test, 'auc_conf_int': ci_test}
+    #test_results = test_results.append(test_set_res, ignore_index=True)
+
+
+    acc_val = accuracy_score(y_val, y_val_pred)
+    prec_val = precision_score(y_val, y_val_pred)
+    recall_val = recall_score(y_val, y_val_pred)
+    roc_auc_val = roc_auc_score(y_val, y_val_pred)
+    f1_val = f1_score(y_val, y_val_pred)
+    f2_val = fbeta_score(y_val, y_val_pred, beta=2)
+    interval_len = 1.96 * sqrt((roc_auc_val * (1 - roc_auc_val)) / len(y_val))
+    interval_low = roc_auc_val - interval_len
+    interval_high = roc_auc_val + interval_len
+    ci_val = [interval_low, interval_high]
+    val_set_res = {'accuracy': acc_val, 'precision': prec_val, 'recall': recall_val,
+                          'roc_auc': roc_auc_val, 'f1': f1_val,
+                          'f2': f2_val, 'auc_conf_int': ci_val}
+    val_results = val_results.append(val_set_res, ignore_index=True)
+
+    train_results = train_results.mean()
+    #test_results = test_results.mean()
+    val_results = val_results.mean()
+
+    results_df = results_df.append(train_results, ignore_index=True)
+    #results_df = results_df.append(test_results, ignore_index=True)
+    results_df = results_df.append(val_results, ignore_index=True)
+
+    return results_df
+
+
+
+
+def get_results(data_name, filepath, group, select_features, clf, fal):
     X_train, X_test, X_val, y_train, y_test, y_val = load_preprocessed_data(FUDAN, fudan_filepath, group='old', select_features=True)
     if select_features == True:
         params = get_best_params(FUDAN, group, 'selected_features', clf, param_file='best_params')
@@ -228,21 +323,42 @@ def get_rf_results(data_name, filepath, group, select_features, clf, fal):
             X_train = apply_feature_abundance_limits(X_train)
             X_test = apply_feature_abundance_limits(X_test)
             X_val = apply_feature_abundance_limits(X_val)
-            results = perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, params, group=group, file_name="selected_features")
+            if clf == "RF":
+                results = perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, params, group=group, file_name="selected_features")
+            else:
+                results = perform_classification(X_train, X_test, X_val, y_train, y_test, y_val, params, group=group, file_name="selected_features")
             print(results)
         if fal == False:
-            results = perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, params, group=group, file_name="selected_features")
-            print(results)
+            if clf == "RF":
+                results = perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, params, group=group, file_name="selected_features")
+            else:
+                results = perform_classification(X_train, X_test, X_val, y_train, y_test, y_val, params, group=group, file_name="selected_features")
+
     if select_features == False:
-        params = get_best_params(FUDAN, group, 'all_features', param_file='best_params')
+        params = get_best_params(FUDAN, group, 'all_features', clf,  param_file='best_params')
         if fal == True:
             X_train = apply_feature_abundance_limits(X_train)
             X_test = apply_feature_abundance_limits(X_test)
             X_val = apply_feature_abundance_limits(X_val)
-            results = perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, params, group=group, file_name="all_features")
+            if clf == "RF":
+                results = perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, params,
+                                                    group=group, file_name="selected_features")
+            else:
+                results = perform_classification(X_train, X_test, X_val, y_train, y_test, y_val, params,
+                                                 group=group, file_name="selected_features")
             print(results)
         if fal == False:
-            results = perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, params, group=group, file_name="all_features")
+            if clf == "RF":
+                results = perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, params,
+                                                    group=group, file_name="selected_features")
+            else:
+                results = perform_classification(X_train, X_test, X_val, y_train, y_test, y_val, params,
+                                                 group=group, file_name="selected_features")
+
             print(results)
+
+
+
+
 
 get_rf_results(FUDAN, fudan_filepath, 'old', select_features=True, clf = "RF", fal=True)

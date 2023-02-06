@@ -150,14 +150,21 @@ def sensitivity_analysis(data_name, filepath, group, select_features = False):
     # define a range of values for the maximum depth
     if group == "old":
         param_ranges = {
-            'n_estimators': np.arange(1, 800, 50, dtype=int),
-            'max_depth': np.arange(2, 20, 1, dtype=int),
-            'min_samples_split': np.arange(2, 25, 1, dtype=int),
-            'min_samples_leaf': np.arange(2, 50, 1, dtype=int),
+            'n_estimators': [10, 35, 100, 1000, 3000], #np.arange(1, 800, 50, dtype=int),
+            'max_depth': [5, 10, 20],#np.arange(2, 20, 1, dtype=int),
+            'min_samples_split': [5, 10, 20], #np.arange(2, 25, 1, dtype=int),
+            'min_samples_leaf': [5, 10, 30], #np.arange(2, 50, 1, dtype=int),
             'max_features': ['sqrt', 'log2'],  # 'sqrt', 'log2']
             #'bootstrap': [True, False],
             'random_state': [1234]
         }
+        """'n_estimators': np.arange(1, 800, 50, dtype=int),
+        'max_depth': np.arange(2, 20, 1, dtype=int),
+        'min_samples_split': np.arange(2, 25, 1, dtype=int),
+        'min_samples_leaf': np.arange(2, 50, 1, dtype=int),
+        'max_features': ['sqrt', 'log2'],  # 'sqrt', 'log2']
+        # 'bootstrap': [True, False],
+        'random_state': [1234]"""
     if group == "young":
         param_ranges = {
             'n_estimators': np.arange(50, 250, 10, dtype=int),
@@ -307,13 +314,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_name', type=str, default=FUDAN)
     parser.add_argument('--filepath', type=str, default=fudan_filepath)
-    parser.add_argument('--group', type=str, default="all")
-    parser.add_argument('--select_features', type=str, default=False)
+    parser.add_argument('--group', type=str, default="old")
+    parser.add_argument('--select_features', type=str, default=True)
 
     args = parser.parse_args()
     data_name = args.data_name
     if data_name == FUDAN:
-        sensitivity_analysis(data_name=args.data_name, filepath=args.filepath, group="all", select_features=False)
+        sensitivity_analysis(data_name=args.data_name, filepath=args.filepath, group="old", select_features=True)
     elif data_name == HUADONG1:
         sensitivity_analysis(data_name=args.data_name, filepath=args.filepath)
     else:

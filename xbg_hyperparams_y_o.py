@@ -67,7 +67,7 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
         }
     if group == "young":
         param_grid = {
-            'n_estimators': np.arange(5, 27, 2, dtype=int),
+            'n_estimators': [1000], #np.arange(5, 27, 2, dtype=int),
             'max_depth': np.arange(2, 22, 4, dtype=int),
             'min_child_weight': np.arange(1, 15, 3, dtype=int),
             'gamma': np.arange(0.2, 2.0, 0.2),
@@ -86,8 +86,8 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
         param_grid = {
             'n_estimators': np.arange(5, 38, 3, dtype=int),
             'max_depth': np.arange(2, 22, 4, dtype=int),
-            'min_child_weight': np.arange(1, 15, 3, dtype=int),
-            'gamma': np.arange(0, 1.5, 0.1),
+            'min_child_weight': np.arange(2, 12, 3, dtype=int),
+            'gamma': np.arange(0, 0.5, 0.1),
             'random_state': [1234]
         }
 
@@ -386,9 +386,9 @@ def run_rf_tuning(data_name, filepath, group, select_features = True):
     #save_result_table(results_test_table, data_name, file_name, group, table_name="best_results_test")
     #save_result_table(results_val_table, data_name, file_name, group, table_name="best_results_val")
 
-run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='young', select_features=True)
-run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='old', select_features=True)
-run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='all', select_features=True)
+#run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='young', select_features=True)
+#run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='old', select_features=True)
+#run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='all', select_features=True)
 run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='young', select_features=False)
 run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='old', select_features=False)
 run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='all', select_features=False)
