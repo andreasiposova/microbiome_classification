@@ -44,10 +44,10 @@ young_old_labels_path = 'data/Yang_PRJNA763023/SraRunTable.csv'
 
 
 def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, file_name, group):
-    n_estimators= [10]  # np.arange(5, 35, 3, dtype=int),
-    max_depth = [5]  # np.arange(2, 12, 3, dtype=int),
-    gamma = [1, 10]  # np.arange(0.5, 1.2, 0.2, dtype=int),
-    max_leaves = [3, 7] #np.arange(3, 13, 3)
+    n_estimators= [25]  # np.arange(5, 35, 3, dtype=int),
+    max_depth = [4]  # np.arange(2, 12, 3, dtype=int),
+    gamma = [0.2, 1]  # np.arange(0.5, 1.2, 0.2, dtype=int),
+    max_leaves = [4, 7] #np.arange(3, 13, 3)
     min_child_weight = [5, 12]  # np.arange(5, , 5, dtype=int),
     learning_rate = [0.0001, 0.01, 0.1] # 0.5, 1],
     subsample = [0.5]

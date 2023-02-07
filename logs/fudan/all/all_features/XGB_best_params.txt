@@ -1,0 +1,1 @@
+{'gamma': 0, 'max_depth': 6, 'max_leaves': 5, 'min_child_weight': 8, 'n_estimators': 10, 'random_state': 1234}
