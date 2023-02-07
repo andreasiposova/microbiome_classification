@@ -1,0 +1,9 @@
+\begin{tabular}{lllllllllllll}
+\toprule
+{} &         Group & leaf\_size &     metric & n\_neighbors &  p &   weights &  accuracy & precision & recall & roc\_auc &        f1 &        f2 \\
+\midrule
+0 &  all\_features &       400 &  minkowski &         392 &  2 &  distance &         1 &         1 &      1 &       1 &         1 &         1 \\
+0 &  all\_features &       400 &  minkowski &         392 &  2 &  distance &         1 &         1 &      1 &       1 &         1 &         1 \\
+0 &  all\_features &       400 &  minkowski &         392 &  2 &  distance &  0.732323 &  0.732323 &      1 &     0.5 &  0.845481 &  0.931877 \\
+\bottomrule
+\end{tabular}
