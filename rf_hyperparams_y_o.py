@@ -1,41 +1,27 @@
-import argparse
-import os
-import pandas as pd
+
 import numpy as np
-from statistics import mean
+
 import os
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 
-from utils import Config
 
 import matplotlib
 matplotlib.use('Agg')
-from matplotlib import pyplot as plt
+
 
 from feature_selection import calculate_feature_importance, select_features_from_paper
 from utils import setup_logging, Config
-from preprocessing import preprocess_data, preprocess_huadong, load_young_old_labels, preprocess_with_y_o_labels, \
-    preprocess_huadong_with_y_o_labels, full_preprocessing_y_o_labels
+from preprocessing import preprocess_data, preprocess_huadong, load_young_old_labels, full_preprocessing_y_o_labels, \
+    remove_correlated_features
 
-from datetime import datetime
-
-from visualization import sensitivity_plot, grid_search_plot, get_rf_scores_params, cm_plot, grid_search_train_test_plot
+from visualization import cm_plot, grid_search_train_test_plot
 
 from data_loading import load_tsv_files
 
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import make_scorer, accuracy_score, precision_score, recall_score, roc_auc_score, f1_score, fbeta_score, confusion_matrix
-from sklearn.model_selection import GridSearchCV
-
-# Set up logging
-#logfile = setup_logging("tune_random_forest") # logger
-
-# Set up logging
-#logger = setup_logging("tune_random_forest")
-#log_file = "rf" + "_" + datetime.now().strftime("%Y%m%d_%H%M%S")
-
-
+from sklearn.metrics import make_scorer, accuracy_score, precision_score, recall_score, roc_auc_score, f1_score, fbeta_score
+from sklearn.model_selection import GridSearchCV, KFold
 
 FUDAN = 'fudan'
 HUADONG1 = 'huadong1'
@@ -56,14 +42,23 @@ young_old_labels_path = 'data/Yang_PRJNA763023/SraRunTable.csv'
 def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, file_name, group):
     if group == "old":
         param_grid = {
-            'n_estimators': np.arange(5, 40, 5, dtype=int),
+            'n_estimators': [100, 500, 1000, 1500], #np.arange(10, 1120, 100, dtype=int),
+            'max_depth': [5, 10, 20], #np.arange(5, 30, 5, dtype=int),
+            'min_samples_split': [5, 10, 20], #np.arange(2, 30, 5, dtype=int),
+            'min_samples_leaf': [5, 10, 20], #np.arange(2, 30, 5, dtype=int),
+            'max_features': ['sqrt', 'log2'],  # 'sqrt', 'log2'],
+            'random_state': [1234],
+            'class_weight': ['balanced_subsample']
+        }
+        """
+        'n_estimators': np.arange(5, 40, 5, dtype=int),
             'max_depth': np.arange(4, 14, 2, dtype=int),
             'min_samples_split': np.arange(2, 10, 2, dtype=int),
             'min_samples_leaf': np.arange(2, 14, 4, dtype=int),
             'max_features': ['sqrt', 'log2'],  # 'sqrt', 'log2'],
             'random_state': [1234],
             'class_weight': ['balanced_subsample']
-        }
+            """
     if group == "young":
         param_grid = {
             'n_estimators': np.arange(5, 35, 3, dtype=int),
@@ -99,18 +94,18 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
     # Define the scoring methods
     scoring = {
         'roc_auc': make_scorer(roc_auc_score),
-        'accuracy': make_scorer(accuracy_score),
+        #'accuracy': make_scorer(accuracy_score),
         #'precision': make_scorer(accuracy_score),
-        'f1': make_scorer(f1_score)
+        #'f1': make_scorer(f1_score)
     }
 
     # initialize the classifier
     rf = RandomForestClassifier(random_state=1234)
     train_scores_gridsearch = []
     test_scores_gridsearch = []
-
+    cv = KFold(n_splits=2, random_state=1234, shuffle=True)
     # Perform the grid search
-    grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=2, scoring=scoring, refit='roc_auc',
+    grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=cv, scoring=scoring, refit='roc_auc',
                                return_train_score=True, n_jobs=-1)
 
     print(f"fitting GridSearch on {file_name}")
@@ -134,6 +129,7 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
 
     grid_val_scores = []
 
+    """
     for i in range(len(grid_search.cv_results_['params'])):
         rf_ = RandomForestClassifier(**grid_search.cv_results_['params'][i])
         rf_.fit(X_train, y_train)
@@ -144,13 +140,14 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
         roc_auc = roc_auc_score(y_val, y_pred)
         f1 = f1_score(y_val, y_pred)
         f2 = fbeta_score(y_val, y_pred, beta=2)
+    """
 
-        #these test scores are the all param combinations from the cv above evaluated on the test set to choose the best params
-        #because the best estimator returned from gridsearch is only best on the train data (cv introduces some data leakage maybe?)
+    #these test scores are the all param combinations from the cv above evaluated on the test set to choose the best params
+    #because the best estimator returned from gridsearch is only best on the train data (cv introduces some data leakage maybe?)
 
-        grid_val_scores.append({'file': file_name, 'params': grid_search.cv_results_['params'][i],
-                            'accuracy': accuracy, 'precision': precision,
-                            'recall': recall, 'roc_auc': roc_auc, 'f1': f1, 'f2': f2})
+        #grid_val_scores.append({'file': file_name, 'params': grid_search.cv_results_['params'][i],
+         #                   'accuracy': accuracy, 'precision': precision,
+          #                  'recall': recall, 'roc_auc': roc_auc, 'f1': f1, 'f2': f2})
 
     #for each file, get the metrics on the test set
     # for each combination of params
@@ -159,10 +156,10 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
 
     # find the test score respective to the highest roc_auc for the corresponding data file
 
-    results_auroc = [d for d in grid_val_scores if 0.6 <= d['roc_auc'] <= 1.0]
-    best_auroc_params = max(results_auroc, key= lambda x: x['roc_auc'])
-    best_params = best_auroc_params['params']
-
+    #results_auroc = [d for d in grid_val_scores if 0.6 <= d['roc_auc'] <= 1.0]
+    #best_auroc_params = max(results_auroc, key= lambda x: x['roc_auc'])
+    #best_params = best_auroc_params['params']
+    best_params = best_params_cv
 
     #best_estimator_params_on_train = best_estimator.get_params()
     train_scores = []
@@ -220,7 +217,7 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
                        'recall': recall, 'roc_auc': roc_auc, 'f1': f1, 'f2': f2})
 
     best_test_set_res = {'accuracy': accuracy, 'precision': precision, 'recall': recall, 'roc_auc': roc_auc, 'f1': f1, 'f2': f2}
-
+    best_auroc_params = best_params_cv
 
 
     # Return the results
@@ -296,42 +293,44 @@ def run_rf_tuning(data_name, filepath, group, select_features = True):
     X_val = pd.DataFrame()
 
     for key in data:
-        if key == "genus_relative" or key == "family_relative":
-            # X_train, X_test, y_train, y_test = preprocess_data(data[key], yang_metadata_path) #preprocess_fudan_data?
-            if group == "all":
-                X_train_1, X_test_1, y_train, y_test = preprocess_data(data[key], yang_metadata_path)
-                X_h1, y_h1 = preprocess_huadong(huadong_data1[key], yang_metadata_path)
-                X_h2, y_h2 = preprocess_huadong(huadong_data2[key], yang_metadata_path)
-                X_val_1 = pd.concat([X_h1, X_h2])
-                y_val = y_h1 + y_h2
-            elif group == 'young' or group == 'old':
-                X_train_1, X_test_1, X_val_1, y_train, y_test, y_val = full_preprocessing_y_o_labels(data,huadong_data1, huadong_data2, key,yang_metadata_path,young_old_labels_path,group)
+        #if key == "genus_relative" or key == "family_relative":
+        # X_train, X_test, y_train, y_test = preprocess_data(data[key], yang_metadata_path) #preprocess_fudan_data?
+        if group == "all":
+            X_train_1, X_test_1, y_train, y_test = preprocess_data(data[key], yang_metadata_path)
+            X_h1, y_h1 = preprocess_huadong(huadong_data1[key], yang_metadata_path)
+            X_h2, y_h2 = preprocess_huadong(huadong_data2[key], yang_metadata_path)
+            X_val_1 = pd.concat([X_h1, X_h2])
+            y_val = y_h1 + y_h2
+        elif group == 'young' or group == 'old':
+            X_train_1, X_test_1, X_val_1, y_train, y_test, y_val = full_preprocessing_y_o_labels(data,huadong_data1, huadong_data2, key,yang_metadata_path,young_old_labels_path,group)
 
-            if select_features == False:
-                file_name = "all_features"
+        X_train = pd.concat([X_train, X_train_1], axis=1)
+        X_test = pd.concat([X_test, X_test_1], axis=1)
+        X_val = pd.concat([X_val, X_val_1], axis=1)
 
-            if select_features == True:
-                file_name = "selected_features"
-                # top_features = calculate_feature_importance(X_train, y_train, group)
-                # top_features_names = list(map(lambda x: x[0], top_features))
-                # print(top_features_names)
-                # X_train = X_train[top_features_names]
-                # X_train.to_csv('data/selected_features_old.csv')
-                # common_cols_f = set(X_test.columns).intersection(X_train.columns)
-                # common_cols_fv = set(X_val.columns).intersection(X_train.columns)
-                # X_test = X_test[common_cols_f]
-                # X_val = X_val[common_cols_fv]
-                X_test_1 = select_features_from_paper(X_test_1, group, key)
-                X_train_1 = select_features_from_paper(X_train_1, group, key)
-                X_val_1 = select_features_from_paper(X_val_1, group, key)
+    if select_features == False:
+        file_name = "all_features"
 
-            X_train = pd.concat([X_train, X_train_1], axis=1)
-            X_test = pd.concat([X_test, X_test_1], axis=1)
-            X_val = pd.concat([X_val, X_val_1], axis=1)
+    if select_features == True:
+        file_name = "selected_features"
+        #top_features = calculate_feature_importance(X_train, y_train, group)
+        #top_features_names = list(map(lambda x: x[0], top_features))
+        #print(top_features_names)
+        #X_train = X_train[top_features_names]
+        #X_train.to_csv('data/selected_features_old.csv')
+        #common_cols_f = set(X_test.columns).intersection(X_train.columns)
+        #common_cols_fv = set(X_val.columns).intersection(X_train.columns)
+        #X_test = X_test[common_cols_f]
+        #X_val = X_val[common_cols_fv]
+        X_test = select_features_from_paper(X_test, group, key)
+        X_train = select_features_from_paper(X_train, group, key)
+        X_val = select_features_from_paper(X_val, group, key)
+
 
 
     common_cols_t = set(X_test.columns).intersection(X_val.columns)
     common_cols_v = set(X_val.columns).intersection(X_test.columns)
+
 
     #filling missing values in huadong cohort with zeros
     #as two files are concatenated for huadong cohort files
@@ -343,9 +342,18 @@ def run_rf_tuning(data_name, filepath, group, select_features = True):
     X_test = X_test[common_cols_t]
     X_train = X_train.append(X_test)
     y_train = y_train + y_test
+    #corr = X_train.corr()
+    #X_train = remove_correlated_features(X_train, 0.95)
+    #common_cols_t = set(X_test.columns).intersection(X_train.columns)
+    #common_cols_v = set(X_val.columns).intersection(X_train.columns)
+    #X_val = X_val[common_cols_v]
+    #X_test = X_test[common_cols_t]
+
+    print("number of features: ", X_train.shape[1])
     print("number of samples in training set: ", len(X_train))
     print("number of samples in test set: ", len(X_test))
     print("number of samples in validation set: ", len(X_val))
+
 
     print(f"Running experiments on {group} samples")
 
@@ -393,8 +401,8 @@ def run_rf_tuning(data_name, filepath, group, select_features = True):
 #run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='young', select_features=True)
 #run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='old', select_features=True)
 #run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='all', select_features=True)
-run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='young', select_features=False)
-#run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='old', select_features=False)
+#run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='young', select_features=False)
+run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='old', select_features=False)
 #run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='all', select_features=False)
 
 """

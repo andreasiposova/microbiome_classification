@@ -7,7 +7,7 @@ def calculate_feature_importance(X, y, group):
     clf = RandomForestClassifier(random_state=1234, n_jobs=-1)
 
     # initialize the k-fold cross-validation
-    kf = KFold(n_splits=3)
+    kf = KFold(n_splits=2)
 
     # initialize the feature importance dictionary
     feature_importance = {}
