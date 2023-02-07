@@ -44,13 +44,14 @@ young_old_labels_path = 'data/Yang_PRJNA763023/SraRunTable.csv'
 
 
 def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, file_name, group):
-    n_estimators= [25]  # np.arange(5, 35, 3, dtype=int),
-    max_depth = [4]  # np.arange(2, 12, 3, dtype=int),
-    gamma = [0.2, 1]  # np.arange(0.5, 1.2, 0.2, dtype=int),
+    n_estimators= [5]  # np.arange(5, 35, 3, dtype=int),
+    max_depth = [4, 12]  # np.arange(2, 12, 3, dtype=int),
+    gamma = [0.0]  # np.arange(0.5, 1.2, 0.2, dtype=int),
     max_leaves = [4, 7] #np.arange(3, 13, 3)
     min_child_weight = [5, 12]  # np.arange(5, , 5, dtype=int),
-    learning_rate = [0.0001, 0.01, 0.1] # 0.5, 1],
+    learning_rate = [0.01, 0.1] # 0.5, 1],
     subsample = [0.5]
+
     random_state = [1234]
     if group == "old":
         param_grid = {
@@ -60,7 +61,8 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
             'max_leaves': max_leaves,
             'min_child_weight': min_child_weight,
             'learning_rate': learning_rate,
-            #'subsample': subsample,
+            'subsample': subsample,
+            'sample_pos_weight': [1.15],
             'random_state': random_state
         }
 
@@ -72,7 +74,8 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
             'max_leaves': max_leaves,
             'min_child_weight': min_child_weight,
             'learning_rate': learning_rate,
-            #'subsample': subsample,
+            'subsample': subsample,
+            'sample_pos_weight': [1.05],
             'random_state': random_state
             }
 
@@ -85,7 +88,8 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
             'max_leaves': max_leaves,
             'min_child_weight': min_child_weight,
             'learning_rate': learning_rate,
-            #'subsample': subsample,
+            'subsample': subsample,
+            'sample_pos_weight': [1.15],
             'random_state': random_state
         }
 
@@ -103,7 +107,7 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
 
     train_scores_gridsearch = []
     test_scores_gridsearch = []
-    cv = KFold(n_splits=2, random_state=1234, shuffle=True)
+    cv = KFold(n_splits=4, random_state=1234, shuffle=True)
     # Perform the grid search
     grid_search = GridSearchCV(estimator=model, param_grid=param_grid, cv=cv, scoring=scoring, refit='roc_auc',
                                return_train_score=True, n_jobs=-1)
@@ -422,8 +426,8 @@ def run_rf_tuning(data_name, filepath, group, select_features = True):
 #run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='old', select_features=True)
 #run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='all', select_features=True)
 run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='young', select_features=False)
-run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='old', select_features=False)
-run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='all', select_features=False)
+#run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='old', select_features=False)
+#run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='all', select_features=False)
 
 """
 if __name__ == '__main__':

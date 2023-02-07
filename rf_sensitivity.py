@@ -146,15 +146,15 @@ def sensitivity_analysis(data_name, filepath, group, select_features = False):
 
 
     # define estimator
-    estimator = Pipeline([("model", RandomForestClassifier(random_state=1234))]) #n_estimators=30, max_depth=5, min_samples_split=16, min_samples_leaf=20, max_features='sqrt',
+    estimator = Pipeline([("model", RandomForestClassifier(n_estimators=2, max_depth=2, min_samples_split=100, min_samples_leaf=20, max_features='sqrt', random_state=1234))]) #n_estimators=30, max_depth=5, min_samples_split=16, min_samples_leaf=20, max_features='sqrt',
     # define a range of values for the maximum depth
     if group == "old":
         param_ranges = {
             'n_estimators': [10, 35, 100, 1000, 3000], #np.arange(1, 800, 50, dtype=int),
-            'max_depth': [5, 10, 20],#np.arange(2, 20, 1, dtype=int),
-            'min_samples_split': [5, 10, 20], #np.arange(2, 25, 1, dtype=int),
-            'min_samples_leaf': [5, 10, 30], #np.arange(2, 50, 1, dtype=int),
-            'max_features': ['sqrt', 'log2'],  # 'sqrt', 'log2']
+            #'max_depth': [5, 10, 20],#np.arange(2, 20, 1, dtype=int),
+            #'min_samples_split': [5, 10, 20], #np.arange(2, 25, 1, dtype=int),
+            #'min_samples_leaf': [5, 10, 30], #np.arange(2, 50, 1, dtype=int),
+            #'max_features': ['sqrt', 'log2'],  # 'sqrt', 'log2']
             #'bootstrap': [True, False],
             'random_state': [1234]
         }

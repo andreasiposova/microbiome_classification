@@ -1,9 +1,9 @@
-\begin{tabular}{llllllllllllll}
+\begin{tabular}{lllllllllllllllll}
 \toprule
-{} &         Group & gamma & max\_depth & max\_leaves & min\_child\_weight & n\_estimators & random\_state &  accuracy & precision & recall &   roc\_auc &        f1 &        f2 \\
+{} &         Group & gamma & learning\_rate & max\_depth & max\_leaves & min\_child\_weight & n\_estimators & random\_state & sample\_pos\_weight & subsample &  accuracy & precision &    recall &   roc\_auc &        f1 &        f2 \\
 \midrule
-0 &  all\_features &     0 &         6 &          5 &                8 &          100 &         1234 &  0.997706 &  0.995726 &      1 &  0.997537 &  0.997859 &  0.999142 \\
-0 &  all\_features &     0 &         6 &          5 &                8 &          100 &         1234 &         1 &         1 &      1 &         1 &         1 &         1 \\
-0 &  all\_features &     0 &         6 &          5 &                8 &          100 &         1234 &  0.393939 &  0.878788 &    0.2 &  0.562264 &  0.325843 &  0.236542 \\
+0 &  all\_features &     0 &           0.1 &         4 &          4 &               12 &            5 &         1234 &              1.15 &       0.5 &   0.78211 &  0.834951 &  0.738197 &  0.785355 &  0.783599 &  0.755712 \\
+0 &  all\_features &     0 &           0.1 &         4 &          4 &               12 &            5 &         1234 &              1.15 &       0.5 &  0.801527 &  0.876923 &      0.76 &  0.808571 &  0.814286 &  0.780822 \\
+0 &  all\_features &     0 &           0.1 &         4 &          4 &               12 &            5 &         1234 &              1.15 &       0.5 &  0.651515 &  0.931818 &  0.565517 &  0.726155 &  0.703863 &  0.613772 \\
 \bottomrule
 \end{tabular}

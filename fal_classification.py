@@ -36,16 +36,18 @@ young_old_labels_path = 'data/Yang_PRJNA763023/SraRunTable.csv'
 
 
 
-def get_best_params(data_name, group, file_name, clf, param_file = 'best_params'):
-    with open(os.path.join(Config.LOG_DIR, data_name, group, file_name, f"{clf}_{param_file}.txt"), "rb") as f:
+def get_best_params(data_name, group, file_name, clf_name, param_file = 'best_params'):
+    with open(os.path.join(Config.LOG_DIR, data_name, group, file_name, f"{clf_name}_{param_file}.txt"), "rb") as f:
         params = f.read()
         params = ast.literal_eval(params.decode())
-        params = params['params']
+        params = params#['params']
     return params
 
 
 
-def load_preprocessed_data(data_name=FUDAN, filepath=fudan_filepath, group='old', select_features = True):
+def load_preprocessed_data(data_name=FUDAN, filepath=fudan_filepath, group='old', select_features=True):
+
+    #y_o_labels = load_young_old_labels(young_old_labels_path)
     data = load_tsv_files(filepath)
     huadong_data1 = load_tsv_files(huadong_filepath_1)
     huadong_data2 = load_tsv_files(huadong_filepath_2)
@@ -55,41 +57,44 @@ def load_preprocessed_data(data_name=FUDAN, filepath=fudan_filepath, group='old'
     X_val = pd.DataFrame()
 
     for key in data:
-        if key == "genus_relative" or key == "family_relative":
-            #X_train, X_test, y_train, y_test = preprocess_data(data[key], yang_metadata_path) #preprocess_fudan_data?
-            if group == "all":
-                X_train_1, X_test_1, y_train, y_test = preprocess_data(data[key], yang_metadata_path)
-                X_h1, y_h1 = preprocess_huadong(huadong_data1[key], yang_metadata_path)
-                X_h2, y_h2 = preprocess_huadong(huadong_data2[key], yang_metadata_path)
-            else:
-                X_train_1, X_test_1, X_val_1, y_train, y_test, y_val = full_preprocessing_y_o_labels(data, huadong_data1, huadong_data2, key, yang_metadata_path, young_old_labels_path, group)
-                if select_features == False:
-                    file_name = "all_features"
-                    print(f"Running experiments on {group} samples, without feature selection")
+        #if key == "genus_relative" or key == "family_relative":
+        # X_train, X_test, y_train, y_test = preprocess_data(data[key], yang_metadata_path) #preprocess_fudan_data?
+        if group == "all":
+            X_train_1, X_test_1, y_train, y_test = preprocess_data(data[key], yang_metadata_path)
+            X_h1, y_h1 = preprocess_huadong(huadong_data1[key], yang_metadata_path)
+            X_h2, y_h2 = preprocess_huadong(huadong_data2[key], yang_metadata_path)
+            X_val_1 = pd.concat([X_h1, X_h2])
+            y_val = y_h1 + y_h2
+        elif group == 'young' or group == 'old':
+            X_train_1, X_test_1, X_val_1, y_train, y_test, y_val = full_preprocessing_y_o_labels(data,huadong_data1, huadong_data2, key,yang_metadata_path,young_old_labels_path,group)
 
-                if select_features == True:
-                    file_name = "selected_features"
-                    print(f"Running experiments on {group} samples, with feature selection")
-                    # top_features = calculate_feature_importance(X_train_1, y_train, group)
-                    # top_features_names = list(map(lambda x: x[0], top_features))
-                    # print(top_features_names)
-                    # X_train_1 = X_train_1[top_features_names]
-                    # X_train.to_csv('data/selected_features_old.csv')
-                    # common_cols_f = set(X_test_1.columns).intersection(X_train_1.columns)
-                    # common_cols_fv = set(X_val_1.columns).intersection(X_train_1.columns)
-                    # X_test_1 = X_test_1[common_cols_f]
-                    # X_val_1 = X_val_[common_cols_fv]
-                X_test_1 = select_features_from_paper(X_test_1, group, key)
-                X_train_1 = select_features_from_paper(X_train_1, group, key)
-                X_val_1 = select_features_from_paper(X_val_1, group, key)
-            X_train = pd.concat([X_train, X_train_1], axis=1)
-            X_test = pd.concat([X_test, X_test_1], axis=1)
-            X_val = pd.concat([X_val, X_val_1], axis=1)
+        X_train = pd.concat([X_train, X_train_1], axis=1)
+        X_test = pd.concat([X_test, X_test_1], axis=1)
+        X_val = pd.concat([X_val, X_val_1], axis=1)
+
+    if select_features == False:
+        file_name = "all_features"
+
+    if select_features == True:
+        file_name = "selected_features"
+        #top_features = calculate_feature_importance(X_train, y_train, group)
+        #top_features_names = list(map(lambda x: x[0], top_features))
+        #print(top_features_names)
+        #X_train = X_train[top_features_names]
+        #X_train.to_csv('data/selected_features_old.csv')
+        #common_cols_f = set(X_test.columns).intersection(X_train.columns)
+        #common_cols_fv = set(X_val.columns).intersection(X_train.columns)
+        #X_test = X_test[common_cols_f]
+        #X_val = X_val[common_cols_fv]
+        X_test = select_features_from_paper(X_test, group, key)
+        X_train = select_features_from_paper(X_train, group, key)
+        X_val = select_features_from_paper(X_val, group, key)
 
 
 
     common_cols_t = set(X_test.columns).intersection(X_val.columns)
     common_cols_v = set(X_val.columns).intersection(X_test.columns)
+
 
     #filling missing values in huadong cohort with zeros
     #as two files are concatenated for huadong cohort files
@@ -100,7 +105,16 @@ def load_preprocessed_data(data_name=FUDAN, filepath=fudan_filepath, group='old'
     X_train = X_train[common_cols_t]
     X_test = X_test[common_cols_t]
     X_train = X_train.append(X_test)
+    #X_train = X_train.fillna(0)
     y_train = y_train + y_test
+    #corr = X_train.corr()
+    #X_train = remove_correlated_features(X_train, 0.98)
+    #common_cols_t = set(X_test.columns).intersection(X_train.columns)
+    #common_cols_v = set(X_val.columns).intersection(X_train.columns)
+    #X_val = X_val[common_cols_v]
+    #X_test = X_test[common_cols_t]
+
+    print("number of features: ", X_train.shape[1])
     print("number of samples in training set: ", len(X_train))
     print("number of samples in test set: ", len(X_test))
     print("number of samples in validation set: ", len(X_val))
@@ -108,11 +122,11 @@ def load_preprocessed_data(data_name=FUDAN, filepath=fudan_filepath, group='old'
 
 
 
-    scaler = MinMaxScaler()
-    scaler.fit(X_train)
-    X_train = scaler.transform(X_train)
-    X_test = scaler.transform(X_test)
-    X_val = scaler.transform(X_val)
+    #scaler = MinMaxScaler()
+    #scaler.fit(X_train)
+    #X_train = scaler.transform(X_train)
+    #X_test = scaler.transform(X_test)
+    #X_val = scaler.transform(X_val)
 
     return X_train, X_test, X_val, y_train, y_test, y_val
 
@@ -215,7 +229,7 @@ def perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, pa
 
     return results_df
 
-def perform_classification():
+def perform_classification(X_train, X_test, X_val, y_train, y_test, y_val, params, group, file_name, clf_name):
 
     results_df = pd.DataFrame()
 
@@ -244,16 +258,16 @@ def perform_classification():
     #predictions_h = pd.concat([predictions_h, df_h], axis=1)#predictions_h = predictions_h.append(df_h, ignore_index=False)
 
 
-    y_train_prob = clf.predict_proba(X_train)
-    y_train_pred = (y_train_prob[:, 1] >= threshold).astype('int')
+    y_train_pred = clf.predict(X_train)
+    #y_train_pred = (y_train_prob[:, 1] >= threshold).astype('int')
 
 
 
     #y_test_prob = clf.predict_proba(X_test)
     #y_test_pred = (y_test_prob[:, 1] >= threshold).astype('int')
 
-    y_val_prob = clf.predict_proba(X_val)
-    y_val_pred = (y_val_prob[:, 1] >= threshold).astype('int')
+    y_val_pred = clf.predict(X_val)
+    #y_val_pred = (y_val_prob[:, 1] >= threshold).astype('int')
 
 
     acc_train = accuracy_score(y_train, y_train_pred)
@@ -315,32 +329,32 @@ def perform_classification():
 
 
 
-def get_results(data_name, filepath, group, select_features, clf, fal):
+def get_results(data_name, filepath, group, select_features, clf_name, fal):
     X_train, X_test, X_val, y_train, y_test, y_val = load_preprocessed_data(FUDAN, fudan_filepath, group='old', select_features=True)
     if select_features == True:
-        params = get_best_params(FUDAN, group, 'selected_features', clf, param_file='best_params')
+        params = get_best_params(FUDAN, group, 'selected_features', clf_name, param_file='best_params')
         if fal == True:
             X_train = apply_feature_abundance_limits(X_train)
             X_test = apply_feature_abundance_limits(X_test)
             X_val = apply_feature_abundance_limits(X_val)
-            if clf == "RF":
+            if clf_name== "RF":
                 results = perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, params, group=group, file_name="selected_features")
             else:
                 results = perform_classification(X_train, X_test, X_val, y_train, y_test, y_val, params, group=group, file_name="selected_features")
             print(results)
         if fal == False:
-            if clf == "RF":
+            if clf_name == "RF":
                 results = perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, params, group=group, file_name="selected_features")
             else:
                 results = perform_classification(X_train, X_test, X_val, y_train, y_test, y_val, params, group=group, file_name="selected_features")
 
     if select_features == False:
-        params = get_best_params(FUDAN, group, 'all_features', clf,  param_file='best_params')
+        params = get_best_params(FUDAN, group, 'all_features', clf_name,  param_file='best_params')
         if fal == True:
             X_train = apply_feature_abundance_limits(X_train)
             X_test = apply_feature_abundance_limits(X_test)
             X_val = apply_feature_abundance_limits(X_val)
-            if clf == "RF":
+            if clf_name == "RF":
                 results = perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, params,
                                                     group=group, file_name="selected_features")
             else:
@@ -348,7 +362,7 @@ def get_results(data_name, filepath, group, select_features, clf, fal):
                                                  group=group, file_name="selected_features")
             print(results)
         if fal == False:
-            if clf == "RF":
+            if clf_name == "RF":
                 results = perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, params,
                                                     group=group, file_name="selected_features")
             else:
@@ -361,4 +375,4 @@ def get_results(data_name, filepath, group, select_features, clf, fal):
 
 
 
-get_rf_results(FUDAN, fudan_filepath, 'old', select_features=True, clf = "RF", fal=True)
+get_results(FUDAN, fudan_filepath, 'old', select_features=True, clf_name = "RF", fal=True)
