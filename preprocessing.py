@@ -153,8 +153,13 @@ def remove_correlated_features(df, threshold):
 
 
 
-def apply_feature_abundance_limits(main_df):
-    cla = [-np.inf, 0.00005, 0.0005, 0.005, 0.05, 0.5, np.inf]
+def apply_feature_abundance_limits(main_df, type):
+    if type == 'low':
+        cla = [-np.inf, 0.00001, 0.0001, 0.001, 0.01, 0.1, np.inf]
+    elif type == 'medium':
+        cla = [-np.inf, 0.00003, 0.0003, 0.003, 0.03, 0.3, np.inf]
+    elif type == 'high':
+        cla = [-np.inf, 0.00005, 0.0005, 0.005, 0.05, 0.5, np.inf]
     main_df = pd.DataFrame(main_df)
     main_index = list(main_df.index.values)
     main_columns = list(main_df.columns.values)

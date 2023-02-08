@@ -1,1 +1,1 @@
-{'file': 'selected_features', 'params': {'gamma': 0.0, 'max_depth': 2, 'min_child_weight': 7, 'n_estimators': 11, 'random_state': 1234}, 'accuracy': 0.7639344262295082, 'precision': 0.8733333333333333, 'recall': 0.7119565217391305, 'roc_auc': 0.7774658641753502, 'f1': 0.7844311377245509, 'f2': 0.7392776523702032}
+{'gamma': 0.0, 'max_depth': 2, 'min_child_weight': 7, 'n_estimators': 11, 'random_state': 1234}

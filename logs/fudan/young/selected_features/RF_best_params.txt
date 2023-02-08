@@ -1,1 +1,1 @@
-{'file': 'selected_features', 'params': {'class_weight': 'balanced_subsample', 'max_depth': 2, 'max_features': 'sqrt', 'min_samples_leaf': 2, 'min_samples_split': 2, 'n_estimators': 24, 'random_state': 1234}, 'accuracy': 0.7570093457943925, 'precision': 0.6382978723404256, 'recall': 0.7692307692307693, 'roc_auc': 0.7596153846153846, 'f1': 0.6976744186046512, 'f2': 0.7389162561576356}
+{'class_weight': 'balanced_subsample', 'max_depth': 2, 'max_features': 'sqrt', 'min_samples_leaf': 2, 'min_samples_split': 2, 'n_estimators': 24, 'random_state': 1234}

@@ -125,22 +125,44 @@ def sensitivity_plot(hp_mean_metrics, data_name, group, file_name):
     #plt.show()
 
 
-def cm_plot(y_test, y_pred, data_name, group, file_name, test_or_val, clf_name):
-    if not os.path.exists(str(Config.PLOTS_DIR) + "/" + str(data_name) + "/" + group + "/" + str(file_name)):
-        os.makedirs(os.path.join(Config.PLOTS_DIR, data_name, group, file_name))
+def cm_plot(y_test, y_pred, data_name, group, file_name, test_or_val, clf_name, final, fal, fal_type):
+    if final==True:
+        if not os.path.exists(str(Config.PLOTS_DIR) + "/" + str(data_name) + "/" + "final_results/" + group + "/" + str(file_name)):
+            os.makedirs(os.path.join(Config.PLOTS_DIR, data_name, "final_results", group, file_name))
 
-    label_mapping = {'healthy': 0, 'CRC': 1}
-    reverse_mapping = {value: key for key, value in label_mapping.items()}
-    y_test = [reverse_mapping[label] for label in y_test]
-    y_pred = [reverse_mapping[label] for label in y_pred]
-    labels = ['healthy', 'CRC']
-    cm = confusion_matrix(y_test, y_pred, labels=labels)
-    plt.figure(figsize=(7, 5))
-    disp = ConfusionMatrixDisplay(cm, display_labels=labels)
-    disp.plot()
-    plt.title(file_name)
-    plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, group, file_name, f"{clf_name}_best_estimator_{test_or_val}_cm.png"))
-    #plt.show()
+        label_mapping = {'healthy': 0, 'CRC': 1}
+        reverse_mapping = {value: key for key, value in label_mapping.items()}
+        y_test = [reverse_mapping[label] for label in y_test]
+        y_pred = [reverse_mapping[label] for label in y_pred]
+        labels = ['healthy', 'CRC']
+        cm = confusion_matrix(y_test, y_pred, labels=labels)
+        plt.figure(figsize=(7, 5))
+        disp = ConfusionMatrixDisplay(cm, display_labels=labels)
+        disp.plot()
+        plt.title(file_name)
+        if fal==True:
+            plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, "final_results", group, file_name,
+                                     f"{clf_name}_best_estimator_{test_or_val}_fal_{fal_type}_cm.png"))
+        if fal==False:
+            plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, "final_results", group, file_name,
+                                     f"{clf_name}_best_estimator_{test_or_val}_cm.png"))
+    else:
+
+        if not os.path.exists(str(Config.PLOTS_DIR) + "/" + str(data_name) + "/" + group + "/" + str(file_name)):
+            os.makedirs(os.path.join(Config.PLOTS_DIR, data_name, group, file_name))
+
+        label_mapping = {'healthy': 0, 'CRC': 1}
+        reverse_mapping = {value: key for key, value in label_mapping.items()}
+        y_test = [reverse_mapping[label] for label in y_test]
+        y_pred = [reverse_mapping[label] for label in y_pred]
+        labels = ['healthy', 'CRC']
+        cm = confusion_matrix(y_test, y_pred, labels=labels)
+        plt.figure(figsize=(7, 5))
+        disp = ConfusionMatrixDisplay(cm, display_labels=labels)
+        disp.plot()
+        plt.title(file_name)
+        plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, group, file_name, f"{clf_name}_best_estimator_{test_or_val}_cm.png"))
+        #plt.show()
 
 def grid_search_train_test_plot(train_scores, test_scores, data_name, group, file_name, clf_name):
     # plot the train and test scores
@@ -189,7 +211,8 @@ def create_scores_dataframe(grid_clf, param_name, num_results=15, negative=True,
         os.path.join(os.path.join(Config.PLOTS_DIR, data_name, f"sensitivity/{param}_rf_sensitivity_test.png")))
     plt.close()
 """
-def plot_conf_int(y_true, y_pred, X_train, X_pred, clf, data_name, file_name, group, set_name):
+def plot_conf_int(y_true, y_pred, X_train, X_pred, clf, data_name, file_name, group, fal, fal_type, set_name):
+
     if not os.path.exists(str(Config.PLOTS_DIR) + "/" + str(data_name) + "/final_results/" + str(group) + "/" + str(file_name)):
         os.makedirs(os.path.join(Config.PLOTS_DIR, data_name, "final_results", group, file_name))
     y_true = np.array(y_true)
@@ -202,7 +225,10 @@ def plot_conf_int(y_true, y_pred, X_train, X_pred, clf, data_name, file_name, gr
     ax.set_xlabel('Prediction (CRC probability)')
     ax.set_ylabel('Number of observations')
     plt.legend()
-    plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, "final_results", group, file_name, f"RF_{set_name}_histogram_CI.png"))
+    if fal == True:
+        plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, "final_results", group, file_name, f"RF_{set_name}_histogram_CI_fal_{fal_type}.png"))
+    if fal == False:
+        plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, "final_results", group, file_name, f"RF_{set_name}_histogram_CI.png"))
     plt.close()
 
     # Calculate the variance
@@ -222,5 +248,29 @@ def plot_conf_int(y_true, y_pred, X_train, X_pred, clf, data_name, file_name, gr
     ax.set_xlabel('Prediction (CRC probability)')
     ax.set_ylabel('Standard deviation')
     plt.legend()
-    plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, "final_results", group, file_name, f"RF_{set_name}_scatterplot_CI.png"))
+    if fal==True:
+        plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, "final_results", group, file_name,f"RF_{set_name}_fal_{fal_type}_scatterplot_CI.png"))
+    if fal == False:
+        plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, "final_results", group, file_name,f"RF_{set_name}_scatterplot_CI.png"))
+    plt.close()
+
+def prob_boxplot(y_true, probs, data_name, group, file_name, set_name, fal, fal_type):
+    # Split the predicted probabilities into positive and negative groups based on the true labels
+    positive_group = probs[y_true == 1, 1]
+    negative_group = probs[y_true == 0, 1]
+
+    # Plot the positive and negative groups as boxplots
+    fig, ax = plt.subplots(1, 2, figsize=(10, 5))
+    ax[0].boxplot(positive_group)
+    ax[0].set_title('CRC')
+    ax[0].set_ylabel('POD')
+    ax[1].boxplot(negative_group)
+    ax[1].set_title('healthy')
+    ax[1].set_ylabel('POD')
+    if fal==True:
+        plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, "final_results", group, file_name,
+                                 f"RF_{set_name}_fal_{fal_type}_boxplots.png"))
+    if fal==False:
+        plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, "final_results", group, file_name,
+                                 f"RF_{set_name}_boxplots.png"))
     plt.close()

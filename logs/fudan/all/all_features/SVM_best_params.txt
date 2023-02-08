@@ -1,1 +1,1 @@
-{'file': 'all_features', 'params': {'C': 10, 'gamma': 0.01, 'kernel': 'rbf', 'random_state': 1234}, 'accuracy': 0.6196721311475409, 'precision': 0.717948717948718, 'recall': 0.6086956521739131, 'roc_auc': 0.6225296442687748, 'f1': 0.6588235294117647, 'f2': 0.6278026905829597}
+{'C': 10, 'gamma': 0.01, 'kernel': 'rbf', 'random_state': 1234}

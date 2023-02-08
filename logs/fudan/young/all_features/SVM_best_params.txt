@@ -1,1 +1,1 @@
-{'file': 'all_features', 'params': {'C': 100, 'gamma': 0.5, 'kernel': 'poly', 'random_state': 1234}, 'accuracy': 0.7009345794392523, 'precision': 0.6206896551724138, 'recall': 0.46153846153846156, 'roc_auc': 0.6498868778280543, 'f1': 0.5294117647058824, 'f2': 0.4864864864864865}
+{'C': 100, 'gamma': 0.5, 'kernel': 'poly', 'random_state': 1234}

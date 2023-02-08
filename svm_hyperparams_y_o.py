@@ -44,7 +44,7 @@ young_old_labels_path = 'data/Yang_PRJNA763023/SraRunTable.csv'
 
 
 def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, file_name, group):
-    c = [5, 9, 100, 1000]  # np.arange(5, 35, 3, dtype=int),
+    c = [7] #, 10] #, 100, 1000]  # np.arange(5, 35, 3, dtype=int),
     gamma = [0.5, 0.2, 0.1, 0.01, 0.001, 0.00001]  # np.arange(2, 12, 3, dtype=int),
     kernel = ['sigmoid', 'poly', 'linear', 'rbf'] #, 'poly',
     subsample = [0.5]
