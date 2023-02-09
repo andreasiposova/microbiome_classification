@@ -2,6 +2,7 @@ from statistics import mean
 import os
 import numpy as np
 import pandas as pd
+from scipy.stats import stats
 
 from utils import Config
 
@@ -256,17 +257,46 @@ def plot_conf_int(y_true, y_pred, X_train, X_pred, clf, data_name, file_name, gr
 
 def prob_boxplot(y_true, probs, data_name, group, file_name, set_name, fal, fal_type):
     # Split the predicted probabilities into positive and negative groups based on the true labels
-    positive_group = probs[y_true == 1, 1]
-    negative_group = probs[y_true == 0, 1]
+    crc = probs[:, -1]
+    healthy = probs[:,0:1]
+    #crc = [probs[i, 1] for i in range(len(y_true)) if y_true[i]==1]
+    #healthy = [probs[i, 1] for i in range(len(y_true)) if y_true[i] == 0]
+    #t_statistic, p_value = stats.ttest_ind(crc, healthy)
+    differences = np.array(crc) - np.array(healthy)
+    t, p = stats.ttest_rel(crc, healthy)
+    # Plot the results
+    fig, ax = plt.subplots(1, 2, figsize=(6, 6))
+    # Create boxplots for positive and negative groups
+    bp1 = ax[0].boxplot(crc, vert=False)
+    bp2 = ax[1].boxplot(healthy, vert=False)
 
+    # Scatterplot for positive group
+    x = np.random.normal(0, 0.05, size=len(crc))
+    ax[0].scatter(x + crc, [1] * len(crc), s=10, c='red')
+
+    # Scatterplot for negative group
+    x = np.random.normal(0, 0.05, size=len(healthy))
+    ax[1].scatter(x + healthy, [1] * len(healthy), s=10, c='blue')
+
+    # Add labels and title
+    ax[0].set_title('Positive Group')
+    ax[1].set_title('Negative Group')
+    ax[0].set_xlabel('Probability')
+    ax[1].set_xlabel('Probability')
+
+    plt.tight_layout()
+    """
     # Plot the positive and negative groups as boxplots
-    fig, ax = plt.subplots(1, 2, figsize=(10, 5))
-    ax[0].boxplot(positive_group)
-    ax[0].set_title('CRC')
-    ax[0].set_ylabel('POD')
-    ax[1].boxplot(negative_group)
-    ax[1].set_title('healthy')
-    ax[1].set_ylabel('POD')
+    fig, ax = plt.subplots(figsize=(5, 5))
+    bplot1 = ax.boxplot(crc, positions=[1], widths=0.6)
+    bplot2 = ax.boxplot(healthy, positions=[2], widths=0.6)
+    ax.set_ylim(0, 1)
+    ax.set_yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
+    #Overlay scatter plots on the boxplots
+    ax.scatter(x=[0] * len(crc), y=crc, marker='.', color='orange', alpha=0.5)
+    ax.scatter(x=[1] * len(healthy), y=healthy, marker='.', color='blue', alpha=0.5)"""
+    #ax.set_title('CRC vs. healthy predicted PODs')
+
     if fal==True:
         plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, "final_results", group, file_name,
                                  f"RF_{set_name}_fal_{fal_type}_boxplots.png"))
