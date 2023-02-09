@@ -23,6 +23,7 @@ from utils import Config
 import matplotlib
 #matplotlib.use('Agg')
 from matplotlib import pyplot as plt
+np.random.seed(43)
 
 from visualization import plot_conf_int, cm_plot, prob_boxplot
 
@@ -117,6 +118,11 @@ def load_preprocessed_data(data_name=FUDAN, filepath=fudan_filepath, group='old'
     # common_cols_v = set(X_val.columns).intersection(X_train.columns)
     # X_val = X_val[common_cols_v]
     # X_test = X_test[common_cols_t]
+    scaler = MinMaxScaler()
+    scaler.fit(X_train)
+    X_train = scaler.transform(X_train)
+    X_test = scaler.transform(X_test)
+    X_val = scaler.transform(X_val)
 
     print("number of features: ", X_train.shape[1])
     print("number of samples in training set: ", len(X_train))
@@ -377,19 +383,19 @@ def get_results(data_name, filepath, group, select_features, clf_name, fal, fal_
                             'Feature Abundance Limits': [fal_type]}
             else:
                 results = perform_classification(X_train, X_test, X_val, y_train, y_test, y_val, params,
-                                                 group=group, file_name="selected_features", clf_name=clf_name, fal=True, fal_type = fal_type)
+                                                 group=group, file_name="all_features", clf_name=clf_name, fal=True, fal_type = fal_type)
                 settings = {'classifier': [clf_name], 'samples': [group], 'features': ['all'],
                             'Feature Abundance Limits': [fal_type]}
 
         if fal == False:
             if clf_name == "RF":
                 results = perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, params,
-                                                    group=group, file_name="selected_features", fal=False, fal_type=None)
+                                                    group=group, file_name="all_features", fal=False, fal_type=None)
                 settings = {'classifier': [clf_name], 'samples': [group], 'features': ['all'],
                             'Feature Abundance Limits': ['no transformation']}
             else:
                 results = perform_classification(X_train, X_test, X_val, y_train, y_test, y_val, params,
-                                                 group=group, file_name="selected_features", clf_name=clf_name, fal=False, fal_type = None)
+                                                 group=group, file_name="all_features", clf_name=clf_name, fal=False, fal_type = None)
                 settings = {'classifier': [clf_name], 'samples': [group], 'features': ['all'],
                             'Feature Abundance Limits': ['no transformation']}
 
@@ -574,7 +580,7 @@ def xgb_results(data_name=FUDAN, fudan_filepath=fudan_filepath):
     xgb_res.to_csv(os.path.join(Config.LOG_DIR, FUDAN, 'final_results/xgb_final_results.csv'))
     return xgb_res
 
-rf_res = rf_results()
+#rf_res = rf_results()
 svm_res = svm_results()
 xgb_res = xgb_results()
 knn_res = knn_results()

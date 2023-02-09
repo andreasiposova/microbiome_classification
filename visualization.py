@@ -147,6 +147,7 @@ def cm_plot(y_test, y_pred, data_name, group, file_name, test_or_val, clf_name, 
         if fal==False:
             plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, "final_results", group, file_name,
                                      f"{clf_name}_best_estimator_{test_or_val}_cm.png"))
+        plt.close()
     else:
 
         if not os.path.exists(str(Config.PLOTS_DIR) + "/" + str(data_name) + "/" + group + "/" + str(file_name)):
@@ -163,7 +164,7 @@ def cm_plot(y_test, y_pred, data_name, group, file_name, test_or_val, clf_name, 
         disp.plot()
         plt.title(file_name)
         plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, group, file_name, f"{clf_name}_best_estimator_{test_or_val}_cm.png"))
-        #plt.show()
+        plt.close()
 
 def grid_search_train_test_plot(train_scores, test_scores, data_name, group, file_name, clf_name):
     # plot the train and test scores
@@ -174,6 +175,7 @@ def grid_search_train_test_plot(train_scores, test_scores, data_name, group, fil
     plt.title('GridSearch CV Train vs. Test score')
     plt.legend()
     plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, group, file_name, f"{clf_name}_grid_search_scores.png"))
+    plt.close()
 
 
 def create_scores_dataframe(grid_clf, param_name, num_results=15, negative=True, graph=True, display_all_params=True):
@@ -259,44 +261,67 @@ def prob_boxplot(y_true, probs, data_name, group, file_name, set_name, fal, fal_
     # Split the predicted probabilities into positive and negative groups based on the true labels
     crc = probs[:, -1]
     healthy = probs[:,0:1]
+    probs = pd.DataFrame(probs)
+
+    vals, names, xs = [], [], []
+    for i, col in enumerate(probs.columns):
+        vals.append(probs[col].values)
+        names.append(col)
+        xs.append(
+            np.random.normal(i + 1, 0.08, probs[col].values.shape[0]))  # adds jitter to the data points - can be adjusted
+
+    plt.boxplot(vals, labels=names)
+    palette = [ '#84cdfc' , '#fdb88e']
+    for x, val, c in zip(xs, vals, palette):
+        plt.scatter(x, val, alpha=0.2, color=c)
+    plt.xlabel("Class", fontweight='normal', fontsize=12)
+    plt.ylabel("Predicted POD", fontweight='normal', fontsize=12)
+    plt.axhline(y=0.5, color='#b9b9b9', linestyle='--', linewidth=1, label='Threshold Value')
+
+
+    """
     #crc = [probs[i, 1] for i in range(len(y_true)) if y_true[i]==1]
     #healthy = [probs[i, 1] for i in range(len(y_true)) if y_true[i] == 0]
     #t_statistic, p_value = stats.ttest_ind(crc, healthy)
     differences = np.array(crc) - np.array(healthy)
     t, p = stats.ttest_rel(crc, healthy)
     # Plot the results
-    fig, ax = plt.subplots(1, 2, figsize=(6, 6))
-    # Create boxplots for positive and negative groups
-    bp1 = ax[0].boxplot(crc, vert=False)
-    bp2 = ax[1].boxplot(healthy, vert=False)
 
-    # Scatterplot for positive group
-    x = np.random.normal(0, 0.05, size=len(crc))
-    ax[0].scatter(x + crc, [1] * len(crc), s=10, c='red')
 
-    # Scatterplot for negative group
-    x = np.random.normal(0, 0.05, size=len(healthy))
-    ax[1].scatter(x + healthy, [1] * len(healthy), s=10, c='blue')
+
+    # Plot the positive and negative groups as boxplots
+    fig, ax = plt.subplots(1, 2, figsize=(5, 7), sharey=True)
+
+    # Create violin plots for positive and negative groups
+    #ax[0].violinplot(crc, showmeans=True, showmedians=False, showextrema=True)
+    #ax[1].violinplot(healthy, showmeans=True, showmedians=False, showextrema=True)
+
+    bplot1 = ax.boxplot(crc, positions=[1], widths=0.6)
+    bplot2 = ax.boxplot(healthy, positions=[2], widths=0.6)
+
+    # Add labels and title
+    # Add labels and title
+    ax.set_xlabel('Class')
+    ax.set_ylabel('Predicted POD')
+    ax.set_title('Predicted POD for CRC vs. healthy group')
+    ax.set_xticklabels(['CRC', 'Healthy'])
+
+    # Set y-limits for both subplots
+    ax[0].set_ylim([0, 1])
+    ax[1].set_ylim([0, 1])
+    yticks = np.arange(0, 1.1, 0.2)
+    ax[0].set_yticks(yticks)
+    ax[1].set_yticks(yticks)
+    x_ticks = np.arange(0, 1.1, 1)
+    ax[0].set_xticks(x_ticks)
+    ax[1].set_xticks(x_ticks)
 
     # Add labels and title
     ax[0].set_title('Positive Group')
     ax[1].set_title('Negative Group')
     ax[0].set_xlabel('Probability')
     ax[1].set_xlabel('Probability')
-
-    plt.tight_layout()
     """
-    # Plot the positive and negative groups as boxplots
-    fig, ax = plt.subplots(figsize=(5, 5))
-    bplot1 = ax.boxplot(crc, positions=[1], widths=0.6)
-    bplot2 = ax.boxplot(healthy, positions=[2], widths=0.6)
-    ax.set_ylim(0, 1)
-    ax.set_yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
-    #Overlay scatter plots on the boxplots
-    ax.scatter(x=[0] * len(crc), y=crc, marker='.', color='orange', alpha=0.5)
-    ax.scatter(x=[1] * len(healthy), y=healthy, marker='.', color='blue', alpha=0.5)"""
-    #ax.set_title('CRC vs. healthy predicted PODs')
-
     if fal==True:
         plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, "final_results", group, file_name,
                                  f"RF_{set_name}_fal_{fal_type}_boxplots.png"))
