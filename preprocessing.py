@@ -96,15 +96,18 @@ def preprocess_with_y_o_labels(dataset, metadata_path, y_o_labels_filepath, grou
     X = dataset.iloc[:, :-1]
     y = dataset.iloc[:, -1]
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=1234)
-
+    X_train = X
+    y_train = y
+    #X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=1234)
+    X_test = pd.DataFrame()
+    y_test = pd.DataFrame()
     #X_train, y_train = replace_inf_vals(X_train, y_train)
     #X_test, y_test = replace_inf_vals(X_test, y_test)
 
 
     label_mapping = {'healthy': 0, 'CRC': 1}
     y_train = [label_mapping[label] for label in y_train]
-    y_test = [label_mapping[label] for label in y_test]
+    #y_test = [label_mapping[label] for label in y_test]
 
     return X_train, X_test, y_train, y_test
 

@@ -2,8 +2,8 @@
 \toprule
 {} &         Group &        class\_weight & max\_depth & max\_features & min\_samples\_leaf & min\_samples\_split & n\_estimators & random\_state &  accuracy & precision &    recall &   roc\_auc &        f1 &        f2 \\
 \midrule
-0 &  all\_features &  balanced\_subsample &         5 &         sqrt &               10 &                 5 &          100 &         1234 &  0.899083 &  0.931507 &  0.875536 &  0.900822 &  0.902655 &  0.886186 \\
-0 &  all\_features &  balanced\_subsample &         5 &         sqrt &               10 &                 5 &          100 &         1234 &  0.694656 &  0.666667 &  0.933333 &  0.654167 &  0.777778 &  0.864198 \\
-0 &  all\_features &  balanced\_subsample &         5 &         sqrt &               10 &                 5 &          100 &         1234 &  0.792929 &  0.837662 &  0.889655 &  0.708979 &  0.862876 &  0.878747 \\
+0 &  all\_features &  balanced\_subsample &         5 &         sqrt &               10 &                 5 &          100 &         1234 &  0.889908 &  0.926267 &  0.862661 &  0.891922 &  0.893333 &  0.874674 \\
+0 &  all\_features &  balanced\_subsample &         5 &         sqrt &               10 &                 5 &          100 &         1234 &  0.900763 &  0.955882 &  0.866667 &  0.906548 &  0.909091 &  0.883152 \\
+0 &  all\_features &  balanced\_subsample &         5 &         sqrt &               10 &                 5 &          100 &         1234 &  0.767677 &  0.902439 &  0.765517 &  0.769551 &  0.828358 &  0.789474 \\
 \bottomrule
 \end{tabular}

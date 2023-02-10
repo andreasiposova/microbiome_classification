@@ -14,7 +14,7 @@ from sklearn.metrics import accuracy_score, roc_auc_score, precision_score, reca
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import MinMaxScaler
 
-from data_loading import load_tsv_files
+from data_loading import load_tsv_files, load_young_old_labels
 from feature_selection import select_features_from_paper
 from preprocessing import preprocess_data, preprocess_huadong, full_preprocessing_y_o_labels, \
     apply_feature_abundance_limits
@@ -51,8 +51,7 @@ def get_best_params(data_name, group, file_name, clf_name, param_file = 'best_pa
 
 
 def load_preprocessed_data(data_name=FUDAN, filepath=fudan_filepath, group='old', select_features=True):
-
-    #y_o_labels = load_young_old_labels(young_old_labels_path)
+    y_o_labels = load_young_old_labels(young_old_labels_path)
     data = load_tsv_files(filepath)
     huadong_data1 = load_tsv_files(huadong_filepath_1)
     huadong_data2 = load_tsv_files(huadong_filepath_2)
@@ -78,7 +77,7 @@ def load_preprocessed_data(data_name=FUDAN, filepath=fudan_filepath, group='old'
                                                                                                  group)
 
         X_train = pd.concat([X_train, X_train_1], axis=1)
-        X_test = pd.concat([X_test, X_test_1], axis=1)
+        #X_test = pd.concat([X_test, X_test_1], axis=1)
         X_val = pd.concat([X_val, X_val_1], axis=1)
 
     if select_features == False:
@@ -95,12 +94,12 @@ def load_preprocessed_data(data_name=FUDAN, filepath=fudan_filepath, group='old'
         # common_cols_fv = set(X_val.columns).intersection(X_train.columns)
         # X_test = X_test[common_cols_f]
         # X_val = X_val[common_cols_fv]
-        X_test = select_features_from_paper(X_test, group, key)
+        #X_test = select_features_from_paper(X_test, group, key)
         X_train = select_features_from_paper(X_train, group, key)
         X_val = select_features_from_paper(X_val, group, key)
 
-    common_cols_t = set(X_test.columns).intersection(X_val.columns)
-    common_cols_v = set(X_val.columns).intersection(X_test.columns)
+    #common_cols_t = set(X_test.columns).intersection(X_val.columns)
+    common_cols_v = set(X_val.columns).intersection(X_train.columns)
 
     # filling missing values in huadong cohort with zeros
     # as two files are concatenated for huadong cohort files
@@ -108,26 +107,29 @@ def load_preprocessed_data(data_name=FUDAN, filepath=fudan_filepath, group='old'
     # thus creating missing values - they are replaced with 0 as it means the abundace of that bacteria is anyway 0
     X_val = X_val.fillna(0)
     X_val = X_val[common_cols_v]
-    X_train = X_train[common_cols_t]
-    X_test = X_test[common_cols_t]
-    X_train = X_train.append(X_test)
-    y_train = y_train + y_test
+    X_train = X_train[common_cols_v]
+    #X_test = X_test[common_cols_t]
+    #X_train = X_train.append(X_test)
+    #y_train = y_train + y_test
     # corr = X_train.corr()
-    # X_train = remove_correlated_features(X_train, 0.98)
+    # X_train = remove_correlated_features(X_train, 0.95)
     # common_cols_t = set(X_test.columns).intersection(X_train.columns)
     # common_cols_v = set(X_val.columns).intersection(X_train.columns)
     # X_val = X_val[common_cols_v]
     # X_test = X_test[common_cols_t]
-    scaler = MinMaxScaler()
-    scaler.fit(X_train)
-    X_train = scaler.transform(X_train)
-    X_test = scaler.transform(X_test)
-    X_val = scaler.transform(X_val)
 
     print("number of features: ", X_train.shape[1])
     print("number of samples in training set: ", len(X_train))
     print("number of samples in test set: ", len(X_test))
     print("number of samples in validation set: ", len(X_val))
+
+    print(f"Running experiments on {group} samples")
+
+    scaler = MinMaxScaler()
+    scaler.fit(X_train)
+    X_train = scaler.transform(X_train)
+    #X_test = scaler.transform(X_test)
+    X_val = scaler.transform(X_val)
 
     return X_train, X_test, X_val, y_train, y_test, y_val
 
@@ -142,7 +144,7 @@ def perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, pa
     #y_train_pred = clf.predict(X_train)
     #y_test_pred = clf.predict(X_test)
     #y_val_pred = clf.predict(X_val)
-    threshold = 0.515
+    threshold = 0.50
     predictions_crc = pd.DataFrame()
     predictions_h = pd.DataFrame()
     n_runs = 10
@@ -213,6 +215,7 @@ def perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, pa
      #                     'roc_auc': roc_auc_test, 'f1': f1_test,
      #                     'f2': f2_test, 'auc_conf_int': ci_test}
     #test_results = test_results.append(test_set_res, ignore_index=True)
+
 
 
     acc_val = accuracy_score(y_val, y_val_pred)
@@ -453,34 +456,34 @@ def svm_results(data_name=FUDAN, fudan_filepath = fudan_filepath):
 
 def rf_results(data_name=FUDAN, fudan_filepath=fudan_filepath):
     # OLD RF ___ SELECTED FEATURES ___
-    otf = get_results(data_name, fudan_filepath, 'old', select_features=True, clf_name="RF", fal=False,fal_type='high')
-    otl = get_results(data_name, fudan_filepath, 'old', select_features=True, clf_name="RF", fal=True, fal_type='low')
-    otm = get_results(data_name, fudan_filepath, 'old', select_features=True, clf_name="RF", fal=True,fal_type='medium')
-    oth = get_results(data_name, fudan_filepath, 'old', select_features=True, clf_name="RF", fal=True, fal_type='high')
+    #otf = get_results(data_name, fudan_filepath, 'old', select_features=True, clf_name="RF", fal=False,fal_type='high')
+    #otl = get_results(data_name, fudan_filepath, 'old', select_features=True, clf_name="RF", fal=True, fal_type='low')
+    #otm = get_results(data_name, fudan_filepath, 'old', select_features=True, clf_name="RF", fal=True,fal_type='medium')
+    #oth = get_results(data_name, fudan_filepath, 'old', select_features=True, clf_name="RF", fal=True, fal_type='high')
 
     # OLD RF ___ ALL FEATURES ___
-    off = get_results(data_name, fudan_filepath, 'old', select_features=False, clf_name="RF", fal=False,fal_type='high')
-    ofl = get_results(data_name, fudan_filepath, 'old', select_features=False, clf_name="RF", fal=True, fal_type='low')
-    ofm = get_results(data_name, fudan_filepath, 'old', select_features=False, clf_name="RF", fal=True,fal_type='medium')
-    ofh = get_results(data_name, fudan_filepath, 'old', select_features=False, clf_name="RF", fal=True,fal_type='high')
+    #off = get_results(data_name, fudan_filepath, 'old', select_features=False, clf_name="RF", fal=False,fal_type='high')
+    #ofl = get_results(data_name, fudan_filepath, 'old', select_features=False, clf_name="RF", fal=True, fal_type='low')
+    #ofm = get_results(data_name, fudan_filepath, 'old', select_features=False, clf_name="RF", fal=True,fal_type='medium')
+    #ofh = get_results(data_name, fudan_filepath, 'old', select_features=False, clf_name="RF", fal=True,fal_type='high')
 
     # YOUNG RF ___ SELECTED FEATURES ___
-    ytf = get_results(data_name, fudan_filepath, 'young', select_features=True, clf_name="RF", fal=False,fal_type='high')
-    ytl = get_results(data_name, fudan_filepath, 'young', select_features=True, clf_name="RF", fal=True,fal_type='low')
-    ytm = get_results(data_name, fudan_filepath, 'young', select_features=True, clf_name="RF", fal=True,fal_type='medium')
-    yth = get_results(data_name, fudan_filepath, 'young', select_features=True, clf_name="RF", fal=True,fal_type='high')
+    #ytf = get_results(data_name, fudan_filepath, 'young', select_features=True, clf_name="RF", fal=False,fal_type='high')
+    #ytl = get_results(data_name, fudan_filepath, 'young', select_features=True, clf_name="RF", fal=True,fal_type='low')
+    #ytm = get_results(data_name, fudan_filepath, 'young', select_features=True, clf_name="RF", fal=True,fal_type='medium')
+    #yth = get_results(data_name, fudan_filepath, 'young', select_features=True, clf_name="RF", fal=True,fal_type='high')
 
     # YOUNG RF ___ ALL FEATURES ___
-    yff = get_results(data_name, fudan_filepath, 'young', select_features=False, clf_name="RF", fal=False, fal_type='high')
-    yfl = get_results(data_name, fudan_filepath, 'young', select_features=False, clf_name="RF", fal=True, fal_type='low')
-    yfm = get_results(data_name, fudan_filepath, 'young', select_features=False, clf_name="RF", fal=True,fal_type='medium')
-    yfh = get_results(data_name, fudan_filepath, 'young', select_features=False, clf_name="RF", fal=True,fal_type='high')
+    #yff = get_results(data_name, fudan_filepath, 'young', select_features=False, clf_name="RF", fal=False, fal_type='high')
+    #yfl = get_results(data_name, fudan_filepath, 'young', select_features=False, clf_name="RF", fal=True, fal_type='low')
+    #yfm = get_results(data_name, fudan_filepath, 'young', select_features=False, clf_name="RF", fal=True,fal_type='medium')
+    #yfh = get_results(data_name, fudan_filepath, 'young', select_features=False, clf_name="RF", fal=True,fal_type='high')
 
     # ALL RF ___ SELECTED FEATURES ___
-    atf = get_results(data_name, fudan_filepath, 'all', select_features=True, clf_name="RF", fal=False,fal_type='high')
-    atl = get_results(data_name, fudan_filepath, 'all', select_features=True, clf_name="RF", fal=True, fal_type='low')
-    atm = get_results(data_name, fudan_filepath, 'all', select_features=True, clf_name="RF", fal=True,fal_type='medium')
-    ath = get_results(data_name, fudan_filepath, 'all', select_features=True, clf_name="RF", fal=True, fal_type='high')
+    #atf = get_results(data_name, fudan_filepath, 'all', select_features=True, clf_name="RF", fal=False,fal_type='high')
+    #atl = get_results(data_name, fudan_filepath, 'all', select_features=True, clf_name="RF", fal=True, fal_type='low')
+    #atm = get_results(data_name, fudan_filepath, 'all', select_features=True, clf_name="RF", fal=True,fal_type='medium')
+    #ath = get_results(data_name, fudan_filepath, 'all', select_features=True, clf_name="RF", fal=True, fal_type='high')
 
     # ALL RF ___ ALL FEATURES ___
     aff = get_results(data_name, fudan_filepath, 'all', select_features=False, clf_name="RF", fal=False,fal_type='high')
@@ -580,10 +583,10 @@ def xgb_results(data_name=FUDAN, fudan_filepath=fudan_filepath):
     xgb_res.to_csv(os.path.join(Config.LOG_DIR, FUDAN, 'final_results/xgb_final_results.csv'))
     return xgb_res
 
-#rf_res = rf_results()
-svm_res = svm_results()
-xgb_res = xgb_results()
-knn_res = knn_results()
+rf_res = rf_results()
+#svm_res = svm_results()
+#xgb_res = xgb_results()
+#knn_res = knn_results()
 
 result_mega_table = pd.concat([rf_res, svm_res, xgb_res, knn_res])
 if not os.path.exists(str(Config.LOG_DIR) + "/" + FUDAN + "/final_results/"):
