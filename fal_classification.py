@@ -120,7 +120,7 @@ def load_preprocessed_data(data_name=FUDAN, filepath=fudan_filepath, group='old'
 
     print("number of features: ", X_train.shape[1])
     print("number of samples in training set: ", len(X_train))
-    print("number of samples in test set: ", len(X_test))
+    #print("number of samples in test set: ", len(X_test))
     print("number of samples in validation set: ", len(X_val))
 
     print(f"Running experiments on {group} samples")
@@ -144,7 +144,17 @@ def perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, pa
     #y_train_pred = clf.predict(X_train)
     #y_test_pred = clf.predict(X_test)
     #y_val_pred = clf.predict(X_val)
-    threshold = 0.50
+    if group == 'young' and file_name == 'all_features':
+        threshold = 0.58
+    if group == 'young' and file_name == 'selected_features':
+        threshold = 0.56
+    if group == 'old' and file_name == 'selected_features':
+        threshold = 0.37
+    if group == 'old' and file_name == 'all_features':
+        threshold = 0.475
+    if group== 'all':
+        threshold = 0.475
+
     predictions_crc = pd.DataFrame()
     predictions_h = pd.DataFrame()
     n_runs = 10
@@ -154,7 +164,7 @@ def perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, pa
     #for i in range(n_runs):
 
     clf.fit(X_train, y_train)
-    pred = clf.predict_proba(X_train)
+    #pred = clf.predict_proba(X_train)
     #prob_crc = pred[:,-1]
     #df_crc = pd.DataFrame(prob_crc)
     #predictions_crc = predictions_crc.append(df_crc, ignore_index=False)
@@ -215,9 +225,7 @@ def perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, pa
      #                     'roc_auc': roc_auc_test, 'f1': f1_test,
      #                     'f2': f2_test, 'auc_conf_int': ci_test}
     #test_results = test_results.append(test_set_res, ignore_index=True)
-
-
-
+    #y_val_pred = clf.predict(X_val)
     acc_val = accuracy_score(y_val, y_val_pred)
     prec_val = precision_score(y_val, y_val_pred)
     recall_val = recall_score(y_val, y_val_pred)
@@ -260,17 +268,29 @@ def perform_classification(X_train, X_test, X_val, y_train, y_test, y_val, param
     elif clf_name == "KNN":
         clf = KNeighborsClassifier(**params)
 
-    clf.fit(X_train, y_train)
+    #clf.fit(X_train, y_train)
 
     train_results = pd.DataFrame()
     # test_results = pd.DataFrame()
     val_results = pd.DataFrame()
     clf.fit(X_train, y_train)
 
+    if group == 'young' and file_name == 'all_features':
+        threshold = 0.58
+    if group == 'young' and file_name == 'selected_features':
+        threshold = 0.56
+    if group == 'old' and file_name == 'selected_features':
+        threshold = 0.37
+    if group == 'old' and file_name == 'all_features':
+        threshold = 0.475
+    if group== 'all':
+        threshold = 0.475
 
-    y_train_pred = clf.predict(X_train)
+    y_train_prob = clf.predict_proba(X_train)
 
-    y_val_pred = clf.predict(X_val)
+    y_val_prob = clf.predict_proba(X_val)
+    y_train_pred = (y_train_prob[:, 1] >= threshold).astype('int')
+    y_val_pred = (y_val_prob[:, 1] >= threshold).astype('int')
 
     acc_train = accuracy_score(y_train, y_train_pred)
     prec_train = precision_score(y_train, y_train_pred)
@@ -413,27 +433,27 @@ def get_results(data_name, filepath, group, select_features, clf_name, fal, fal_
 def svm_results(data_name=FUDAN, fudan_filepath = fudan_filepath):
     #OLD SVM ___ SELECTED FEATURES ___
     otf = get_results(data_name, fudan_filepath, 'old', select_features=True, clf_name = "SVM", fal=False, fal_type='high')
-    otl = get_results(data_name, fudan_filepath, 'old', select_features=True, clf_name = "SVM", fal=True, fal_type='low')
-    otm = get_results(data_name, fudan_filepath, 'old', select_features=True, clf_name = "SVM", fal=True, fal_type='medium')
-    oth = get_results(data_name, fudan_filepath, 'old', select_features=True, clf_name = "SVM", fal=True, fal_type='high')
+    #otl = get_results(data_name, fudan_filepath, 'old', select_features=True, clf_name = "SVM", fal=True, fal_type='low')
+    #otm = get_results(data_name, fudan_filepath, 'old', select_features=True, clf_name = "SVM", fal=True, fal_type='medium')
+    #oth = get_results(data_name, fudan_filepath, 'old', select_features=True, clf_name = "SVM", fal=True, fal_type='high')
 
     #OLD SVM ___ ALL FEATURES ___
     off = get_results(data_name, fudan_filepath, 'old', select_features=False, clf_name = "SVM", fal=False, fal_type='high')
-    ofl = get_results(data_name, fudan_filepath, 'old', select_features=False, clf_name = "SVM", fal=True, fal_type='low')
-    ofm = get_results(data_name, fudan_filepath, 'old', select_features=False, clf_name = "SVM", fal=True, fal_type='medium')
-    ofh = get_results(data_name, fudan_filepath, 'old', select_features=False, clf_name = "SVM", fal=True, fal_type='high')
+    #ofl = get_results(data_name, fudan_filepath, 'old', select_features=False, clf_name = "SVM", fal=True, fal_type='low')
+    #ofm = get_results(data_name, fudan_filepath, 'old', select_features=False, clf_name = "SVM", fal=True, fal_type='medium')
+    #ofh = get_results(data_name, fudan_filepath, 'old', select_features=False, clf_name = "SVM", fal=True, fal_type='high')
 
     #YOUNG SVM ___ SELECTED FEATURES ___
     ytf = get_results(data_name, fudan_filepath, 'young', select_features=True, clf_name = "SVM", fal=False, fal_type='high')
-    ytl = get_results(data_name, fudan_filepath, 'young', select_features=True, clf_name = "SVM", fal=True, fal_type='low')
-    ytm = get_results(data_name, fudan_filepath, 'young', select_features=True, clf_name = "SVM", fal=True, fal_type='medium')
-    yth = get_results(data_name, fudan_filepath, 'young', select_features=True, clf_name = "SVM", fal=True, fal_type='high')
+    #ytl = get_results(data_name, fudan_filepath, 'young', select_features=True, clf_name = "SVM", fal=True, fal_type='low')
+    #ytm = get_results(data_name, fudan_filepath, 'young', select_features=True, clf_name = "SVM", fal=True, fal_type='medium')
+    #yth = get_results(data_name, fudan_filepath, 'young', select_features=True, clf_name = "SVM", fal=True, fal_type='high')
 
     #YOUNG SVM ___ ALL FEATURES ___
     yff = get_results(data_name, fudan_filepath, 'young', select_features=False, clf_name = "SVM", fal=False, fal_type='high')
-    yfl = get_results(data_name, fudan_filepath, 'young', select_features=False, clf_name = "SVM", fal=True, fal_type='low')
-    yfm = get_results(data_name, fudan_filepath, 'young', select_features=False, clf_name = "SVM", fal=True, fal_type='medium')
-    yfh = get_results(data_name, fudan_filepath, 'young', select_features=False, clf_name = "SVM", fal=True, fal_type='high')
+    #yfl = get_results(data_name, fudan_filepath, 'young', select_features=False, clf_name = "SVM", fal=True, fal_type='low')
+    #yfm = get_results(data_name, fudan_filepath, 'young', select_features=False, clf_name = "SVM", fal=True, fal_type='medium')
+    #yfh = get_results(data_name, fudan_filepath, 'young', select_features=False, clf_name = "SVM", fal=True, fal_type='high')
 
     #ALL SVM ___ SELECTED FEATURES ___
     atf = get_results(data_name, fudan_filepath, 'all', select_features=True, clf_name = "SVM", fal=False, fal_type='high')
@@ -456,34 +476,34 @@ def svm_results(data_name=FUDAN, fudan_filepath = fudan_filepath):
 
 def rf_results(data_name=FUDAN, fudan_filepath=fudan_filepath):
     # OLD RF ___ SELECTED FEATURES ___
-    #otf = get_results(data_name, fudan_filepath, 'old', select_features=True, clf_name="RF", fal=False,fal_type='high')
-    #otl = get_results(data_name, fudan_filepath, 'old', select_features=True, clf_name="RF", fal=True, fal_type='low')
-    #otm = get_results(data_name, fudan_filepath, 'old', select_features=True, clf_name="RF", fal=True,fal_type='medium')
-    #oth = get_results(data_name, fudan_filepath, 'old', select_features=True, clf_name="RF", fal=True, fal_type='high')
+    otf = get_results(data_name, fudan_filepath, 'old', select_features=True, clf_name="RF", fal=False,fal_type='high')
+    otl = get_results(data_name, fudan_filepath, 'old', select_features=True, clf_name="RF", fal=True, fal_type='low')
+    otm = get_results(data_name, fudan_filepath, 'old', select_features=True, clf_name="RF", fal=True,fal_type='medium')
+    oth = get_results(data_name, fudan_filepath, 'old', select_features=True, clf_name="RF", fal=True, fal_type='high')
 
     # OLD RF ___ ALL FEATURES ___
-    #off = get_results(data_name, fudan_filepath, 'old', select_features=False, clf_name="RF", fal=False,fal_type='high')
-    #ofl = get_results(data_name, fudan_filepath, 'old', select_features=False, clf_name="RF", fal=True, fal_type='low')
-    #ofm = get_results(data_name, fudan_filepath, 'old', select_features=False, clf_name="RF", fal=True,fal_type='medium')
-    #ofh = get_results(data_name, fudan_filepath, 'old', select_features=False, clf_name="RF", fal=True,fal_type='high')
+    off = get_results(data_name, fudan_filepath, 'old', select_features=False, clf_name="RF", fal=False,fal_type='high')
+    ofl = get_results(data_name, fudan_filepath, 'old', select_features=False, clf_name="RF", fal=True, fal_type='low')
+    ofm = get_results(data_name, fudan_filepath, 'old', select_features=False, clf_name="RF", fal=True,fal_type='medium')
+    ofh = get_results(data_name, fudan_filepath, 'old', select_features=False, clf_name="RF", fal=True,fal_type='high')
 
     # YOUNG RF ___ SELECTED FEATURES ___
-    #ytf = get_results(data_name, fudan_filepath, 'young', select_features=True, clf_name="RF", fal=False,fal_type='high')
-    #ytl = get_results(data_name, fudan_filepath, 'young', select_features=True, clf_name="RF", fal=True,fal_type='low')
-    #ytm = get_results(data_name, fudan_filepath, 'young', select_features=True, clf_name="RF", fal=True,fal_type='medium')
-    #yth = get_results(data_name, fudan_filepath, 'young', select_features=True, clf_name="RF", fal=True,fal_type='high')
+    ytf = get_results(data_name, fudan_filepath, 'young', select_features=True, clf_name="RF", fal=False,fal_type='high')
+    ytl = get_results(data_name, fudan_filepath, 'young', select_features=True, clf_name="RF", fal=True,fal_type='low')
+    ytm = get_results(data_name, fudan_filepath, 'young', select_features=True, clf_name="RF", fal=True,fal_type='medium')
+    yth = get_results(data_name, fudan_filepath, 'young', select_features=True, clf_name="RF", fal=True,fal_type='high')
 
     # YOUNG RF ___ ALL FEATURES ___
-    #yff = get_results(data_name, fudan_filepath, 'young', select_features=False, clf_name="RF", fal=False, fal_type='high')
-    #yfl = get_results(data_name, fudan_filepath, 'young', select_features=False, clf_name="RF", fal=True, fal_type='low')
-    #yfm = get_results(data_name, fudan_filepath, 'young', select_features=False, clf_name="RF", fal=True,fal_type='medium')
-    #yfh = get_results(data_name, fudan_filepath, 'young', select_features=False, clf_name="RF", fal=True,fal_type='high')
+    yff = get_results(data_name, fudan_filepath, 'young', select_features=False, clf_name="RF", fal=False, fal_type='high')
+    yfl = get_results(data_name, fudan_filepath, 'young', select_features=False, clf_name="RF", fal=True, fal_type='low')
+    yfm = get_results(data_name, fudan_filepath, 'young', select_features=False, clf_name="RF", fal=True,fal_type='medium')
+    yfh = get_results(data_name, fudan_filepath, 'young', select_features=False, clf_name="RF", fal=True,fal_type='high')
 
     # ALL RF ___ SELECTED FEATURES ___
-    #atf = get_results(data_name, fudan_filepath, 'all', select_features=True, clf_name="RF", fal=False,fal_type='high')
-    #atl = get_results(data_name, fudan_filepath, 'all', select_features=True, clf_name="RF", fal=True, fal_type='low')
-    #atm = get_results(data_name, fudan_filepath, 'all', select_features=True, clf_name="RF", fal=True,fal_type='medium')
-    #ath = get_results(data_name, fudan_filepath, 'all', select_features=True, clf_name="RF", fal=True, fal_type='high')
+    atf = get_results(data_name, fudan_filepath, 'all', select_features=True, clf_name="RF", fal=False,fal_type='high')
+    atl = get_results(data_name, fudan_filepath, 'all', select_features=True, clf_name="RF", fal=True, fal_type='low')
+    atm = get_results(data_name, fudan_filepath, 'all', select_features=True, clf_name="RF", fal=True,fal_type='medium')
+    ath = get_results(data_name, fudan_filepath, 'all', select_features=True, clf_name="RF", fal=True, fal_type='high')
 
     # ALL RF ___ ALL FEATURES ___
     aff = get_results(data_name, fudan_filepath, 'all', select_features=False, clf_name="RF", fal=False,fal_type='high')
@@ -587,8 +607,8 @@ rf_res = rf_results()
 #svm_res = svm_results()
 #xgb_res = xgb_results()
 #knn_res = knn_results()
-
+"""
 result_mega_table = pd.concat([rf_res, svm_res, xgb_res, knn_res])
 if not os.path.exists(str(Config.LOG_DIR) + "/" + FUDAN + "/final_results/"):
     os.makedirs(os.path.join(Config.LOG_DIR, FUDAN, 'final_results'))
-result_mega_table.to_csv(os.path.join(Config.LOG_DIR, FUDAN, 'final_results/final_results.csv'))
+result_mega_table.to_csv(os.path.join(Config.LOG_DIR, FUDAN, 'final_results/final_results.csv'))"""

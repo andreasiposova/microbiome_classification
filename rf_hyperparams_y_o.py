@@ -61,11 +61,11 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
             """
     if group == "young":
         param_grid = {
-            'n_estimators': np.arange(5, 100, 3, dtype=int),
-            'max_depth': np.arange(2, 23, 3, dtype=int),
-            'min_samples_split': np.arange(2, 20, 2, dtype=int),
-            'min_samples_leaf': np.arange(3, 40, 5, dtype=int),
-            'max_features': ['sqrt', 'log2'],  # 'sqrt', 'log2'],
+            'n_estimators': np.arange(900, 1300, 50, dtype=int),
+            'max_depth': np.arange(7, 9, 1, dtype=int),
+            'min_samples_split': np.arange(9, 20, 3, dtype=int),
+            'min_samples_leaf': np.arange(10, 12, 2, dtype=int),
+            #'max_features': ['sqrt', 'log2'],  # 'sqrt', 'log2'],
             'random_state': [1234],
             'class_weight': ['balanced_subsample']
         }
@@ -82,11 +82,11 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
 
     if group == "all":
         param_grid = {
-            'n_estimators': np.arange(5, 900, 25, dtype=int),
-            'max_depth': np.arange(2, 4, 1, dtype=int),
-            #'min_samples_split': np.arange(2, 10, 2, dtype=int),
-            #'min_samples_leaf': np.arange(2, 14, 4, dtype=int),
-            #'max_features': ['sqrt', 'log2'],  # 'sqrt', 'log2'],
+            'n_estimators': np.arange(5, 900, 50, dtype=int),
+            'max_depth': np.arange(2, 8, 1, dtype=int),
+            'min_samples_split': np.arange(4, 10, 2, dtype=int),
+            'min_samples_leaf': np.arange(4, 14, 2, dtype=int),
+            'max_features': ['sqrt', 'log2'],  # 'sqrt', 'log2'],
             'random_state': [1234],
             'class_weight': ['balanced_subsample']
         }
@@ -94,9 +94,10 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
     # Define the scoring methods
     scoring = {
         'roc_auc': make_scorer(roc_auc_score),
-        #'accuracy': make_scorer(accuracy_score),
+        'accuracy': make_scorer(accuracy_score),
         #'precision': make_scorer(accuracy_score),
         #'f1': make_scorer(f1_score)
+        #'recall': make_scorer(recall_score)
     }
 
     # initialize the classifier
@@ -402,9 +403,9 @@ def run_rf_tuning(data_name, filepath, group, select_features = True):
 #run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='young', select_features=True)
 #run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='old', select_features=True)
 #run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='all', select_features=True)
-#run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='young', select_features=False)
+run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='young', select_features=False)
 #run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='old', select_features=False)
-run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='all', select_features=False)
+#run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='all', select_features=False)
 
 """
 if __name__ == '__main__':

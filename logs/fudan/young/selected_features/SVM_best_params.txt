@@ -1,1 +1,1 @@
-{'C': 9, 'gamma': 0.5, 'kernel': 'rbf', 'random_state': 1234}
+{'C': 100, 'gamma': 0.001, 'kernel': 'sigmoid', 'probability': True, 'random_state': 1234}

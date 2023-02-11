@@ -1,6 +1,11 @@
 import os.path
 
+import numpy as np
 import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import make_scorer, roc_auc_score, accuracy_score
+from sklearn.model_selection import KFold, GridSearchCV
+from sklearn.preprocessing import MinMaxScaler
 
 from data_loading import load_young_old_labels, load_tsv_files
 from feature_selection import select_features_from_paper
@@ -129,9 +134,83 @@ def save_data(FUDAN, fudan_filepath, group, select_features):
         y_train.to_csv(os.path.join(Config.DATA_DIR, 'preprocessed', group, f"all_features/y_train.csv"))
         y_val.to_csv(os.path.join(Config.DATA_DIR, 'preprocessed', group, f"all_features/y_val.csv"))
 
-save_data(FUDAN, fudan_filepath, group= 'young', select_features=True)
-save_data(FUDAN, fudan_filepath, group= 'young', select_features=False)
-save_data(FUDAN, fudan_filepath, group= 'old', select_features=True)
-save_data(FUDAN, fudan_filepath, group= 'old', select_features=False)
-save_data(FUDAN, fudan_filepath, group= 'all', select_features=True)
-save_data(FUDAN, fudan_filepath, group= 'all', select_features=False)
+#save_data(FUDAN, fudan_filepath, group= 'young', select_features=True)
+#save_data(FUDAN, fudan_filepath, group= 'young', select_features=False)
+#save_data(FUDAN, fudan_filepath, group= 'old', select_features=True)
+#save_data(FUDAN, fudan_filepath, group= 'old', select_features=False)
+#save_data(FUDAN, fudan_filepath, group= 'all', select_features=True)
+#save_data(FUDAN, fudan_filepath, group= 'all', select_features=False)
+
+def load_Xy(group, select_features):
+    if select_features == True:
+        X_train = pd.read_csv(os.path.join(Config.DATA_DIR, 'preprocessed', group, 'selected_features/X_train.csv'), index_col=0)
+        y_train = pd.read_csv(os.path.join(Config.DATA_DIR, 'preprocessed', group, 'selected_features/y_train.csv'),index_col=0)
+        X_val = pd.read_csv(os.path.join(Config.DATA_DIR,'preprocessed', group, 'selected_features/X_val.csv'), index_col=0)
+        y_val = pd.read_csv(os.path.join(Config.DATA_DIR, 'preprocessed', group, 'selected_features/y_val.csv'), index_col = 0)
+    if select_features == False:
+        X_train = pd.read_csv(os.path.join(Config.DATA_DIR, 'preprocessed', group, 'all_features/X_train.csv'), index_col=0)
+        y_train = pd.read_csv(os.path.join(Config.DATA_DIR, 'preprocessed', group, 'all_features/y_train.csv'), index_col=0)
+        X_val = pd.read_csv(os.path.join(Config.DATA_DIR,'preprocessed', group, 'all_features/X_val.csv'), index_col = 0)
+        y_val = pd.read_csv(os.path.join(Config.DATA_DIR, 'preprocessed', group, 'all_features/y_val.csv'), index_col=0)
+    scaler = MinMaxScaler()
+    scaler.fit(X_train)
+    X_train = scaler.transform(X_train)
+    X_val = scaler.transform(X_val)
+    y_train = y_train.iloc[:,0].to_numpy()
+    y_val = y_val.iloc[:,0].to_numpy()
+
+    param_grid = {
+        'n_estimators': np.arange(10, 40, 5, dtype=int),
+        'max_depth': np.arange(5, 10, 1, dtype=int),
+        'min_samples_split': np.arange(7, 20, 2, dtype=int),
+        'min_samples_leaf': np.arange(4, 12, 1, dtype=int),
+        'max_features': ['sqrt', 'log2'],  # 'sqrt', 'log2'],
+        'random_state': [1234],
+        'class_weight': ['balanced_subsample']
+    }
+
+    scoring = {
+        'roc_auc': make_scorer(roc_auc_score),
+        'accuracy': make_scorer(accuracy_score),
+        #'precision': make_scorer(accuracy_score),
+        #'f1': make_scorer(f1_score)
+        #'recall': make_scorer(recall_score)
+    }
+
+    rf = RandomForestClassifier(random_state=1234)
+    train_scores_gridsearch = []
+    test_scores_gridsearch = []
+    cv = KFold(n_splits=2, random_state=1234, shuffle=True)
+    # Perform the grid search
+    grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=cv, scoring=scoring, refit='roc_auc',
+                               return_train_score=True, n_jobs=-1)
+    grid_search.fit(X_train, y_train)
+    results = grid_search.cv_results_
+    best_params = grid_search.best_params_
+    best_score = grid_search.best_score_
+    grid_val_scores=pd.DataFrame()
+    for i in range(len(grid_search.cv_results_['params'])):
+        rf_ = RandomForestClassifier(**grid_search.cv_results_['params'][i])
+        rf_.fit(X_train, y_train)
+        y_pred = rf_.predict(X_val)
+        accuracy = accuracy_score(y_val, y_pred)
+        #precision = precision_score(y_val, y_pred)
+        #recall = recall_score(y_val, y_pred)
+        roc_auc = roc_auc_score(y_val, y_pred)
+        if roc_auc > 0.68:
+            print(roc_auc)
+            print(grid_search.cv_results_['params'][i])
+    """print("hi")
+        grid_val_scores = grid_val_scores.append({'params': grid_search.cv_results_['params'][i],
+                                                   'accuracy': accuracy,
+                                #                   'precision': precision,
+                                #                  'recall': recall,
+                                                  'roc_auc': roc_auc}, ignore_index=True)
+                                #                  'f1': f1, 'f2': f2})
+    results_auroc = [d for d in grid_val_scores if 0.1 <= d['roc_auc'] <= 1.0]
+    best_auroc_params = max(results_auroc, key= lambda x: x['roc_auc'])
+    best_params = best_auroc_params['params']"""
+    #print(best_params)
+    #print(best_score)
+
+load_Xy('young', False)

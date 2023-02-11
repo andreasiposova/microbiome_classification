@@ -120,13 +120,21 @@ def preprocess_huadong_with_y_o_labels(dataset, metadata_path, y_o_labels_filepa
     metadata = labels.join(meta)
     data = dataset.join(metadata)
     if group == 'old':
-        data = data.loc[(data['Lon'] == 'oControl') | (data['Lon'] == 'Old') | (data['Lon'] == 'oCRC') | (data['Lon'] == 'oCTRL')]
+        data1 = data.loc[(data['Lon'] == 'oControl')]
+        data2 = data.loc[(data['Lon'] == 'Old')]
+        data3 = data.loc[(data['Lon'] == 'oCRC')]
+        data4 = data.loc[(data['Lon'] == 'oCTRL')]
+        dataset = pd.concat([data1, data2, data3, data4])
     if group == 'young':
-        data = data.loc[(data['Lon'] == 'yControl') | (data['Lon'] == 'Young')| (data['Lon'] == 'yCRC') | (data['Lon'] == 'yCTRL')]
+        data1 = data.loc[(data['Lon'] == 'yControl')]
+        data2 = data.loc[(data['Lon'] == 'Young')]
+        data3 = data.loc[(data['Lon'] == 'yCRC')]
+        data4 = data.loc[(data['Lon'] == 'yCTRL')]
+        dataset = pd.concat([data1, data2, data3, data4])
 
-    data.drop(['Lon'], axis=1, inplace=True)
-    X = data.iloc[:, :-1]
-    y = data.iloc[:, -1]
+    dataset.drop(['Lon'], axis=1, inplace=True)
+    X = dataset.iloc[:, :-1]
+    y = dataset.iloc[:, -1]
 
     X, y = replace_inf_vals(X, y)
     X = X.fillna(0)

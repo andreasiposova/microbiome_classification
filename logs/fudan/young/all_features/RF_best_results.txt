@@ -1,9 +1,8 @@
-\begin{tabular}{lllllllllllllll}
+\begin{tabular}{llllllllllllll}
 \toprule
-{} &         Group &        class\_weight & max\_depth & max\_features & min\_samples\_leaf & min\_samples\_split & n\_estimators & random\_state &  accuracy & precision &    recall &   roc\_auc &        f1 &        f2 \\
+{} &         Group &        class\_weight & max\_depth & min\_samples\_leaf & min\_samples\_split & n\_estimators & random\_state &  accuracy & precision &    recall &   roc\_auc &        f1 &        f2 \\
 \midrule
-0 &  all\_features &  balanced\_subsample &         5 &         sqrt &                3 &                10 &           26 &         1234 &  0.955326 &  0.951389 &  0.958042 &  0.955372 &  0.954704 &  0.956704 \\
-0 &  all\_features &  balanced\_subsample &         5 &         sqrt &                3 &                10 &           26 &         1234 &  0.954545 &  0.921053 &  0.972222 &  0.957265 &  0.945946 &  0.961538 \\
-0 &  all\_features &  balanced\_subsample &         5 &         sqrt &                3 &                10 &           26 &         1234 &  0.383178 &  0.368932 &  0.974359 &  0.509238 &  0.535211 &  0.733591 \\
+0 &  all\_features &  balanced\_subsample &         7 &               10 &                 9 &          950 &         1234 &  0.920962 &  0.905405 &  0.937063 &  0.921234 &  0.920962 &  0.930556 \\
+0 &  all\_features &  balanced\_subsample &         7 &               10 &                 9 &          950 &         1234 &  0.514019 &  0.419753 &  0.871795 &  0.590309 &  0.566667 &    0.7173 \\
 \bottomrule
 \end{tabular}

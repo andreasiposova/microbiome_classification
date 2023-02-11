@@ -4,9 +4,7 @@ import numpy as np
 import os
 import pandas as pd
 from sklearn import svm
-from sklearn.preprocessing import MinMaxScaler
-
-
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 import matplotlib
 matplotlib.use('Agg')
@@ -40,20 +38,20 @@ huadong_filepath_2 = 'data/Yang_PRJNA763023/Yang_PRJNA763023_PE_2/parsed/normali
 young_old_labels_path = 'data/Yang_PRJNA763023/SraRunTable.csv'
 
 
-
-
-
 def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, file_name, group):
-    c = [7] #, 10] #, 100, 1000]  # np.arange(5, 35, 3, dtype=int),
+    c = [0.1, 0.01, 1] # np.arange(5, 35, 3, dtype=int),
     gamma = [0.5, 0.2, 0.1, 0.01, 0.001, 0.00001]  # np.arange(2, 12, 3, dtype=int),
     kernel = ['sigmoid', 'poly', 'linear', 'rbf'] #, 'poly',
     subsample = [0.5]
     random_state = [1234]
+    probability = [True]
+
     if group == "old":
         param_grid = {
             'C': c,
             'gamma': gamma,
             'kernel': kernel,
+            'probability': probability,
             'random_state': random_state
         }
 
@@ -62,6 +60,7 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
             'C': c,
             'gamma': gamma,
             'kernel': kernel,
+            'probability': probability,
             'random_state': random_state
             }
 
@@ -71,7 +70,8 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
             'C': c,
             'gamma': gamma,
             'kernel': kernel,
-            'random_state': random_state
+            'random_state': random_state,
+            'probability': probability
         }
 
     # Define the scoring methods
@@ -84,12 +84,14 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
 
     # initialize the classifier
 
-    svc = svm.SVC(random_state = 1234)
+    #svc = svm.SVC(random_state = 1234)
 
     train_scores_gridsearch = []
     test_scores_gridsearch = []
     cv = KFold(n_splits=10, random_state=1234, shuffle=True)
     # Perform the grid search
+    svc = svm.SVC()
+
     grid_search = GridSearchCV(estimator=svc, param_grid=param_grid, cv=cv, scoring=scoring, refit='roc_auc',
                                return_train_score=True, n_jobs=-1)
 
@@ -103,11 +105,24 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
     results = grid_search.cv_results_
 
 
+    early_stopping() #implemet
+
+
     train_scores_gridsearch = results.get('mean_train_roc_auc')
     test_scores_gridsearch = results.get('mean_test_roc_auc')
 
     grid_search_train_test_plot(train_scores_gridsearch, test_scores_gridsearch, data_name, group, file_name, "SVM")
 
+    if group == 'young' and file_name == 'all_features':
+        threshold = 0.58
+    if group == 'young' and file_name == 'selected_features':
+        threshold = 0.56
+    if group == 'old' and file_name == 'selected_features':
+        threshold = 0.37
+    if group == 'old' and file_name == 'all_features':
+        threshold = 0.475
+    if group== 'all':
+        threshold = 0.475
 
     test_scores = []
 
@@ -153,7 +168,9 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
     svm_best = svm.SVC(**best_params)
     svm_best.fit(X_train, y_train)
 
-    y_pred_train = svm_best.predict(X_train)
+
+    y_prob_train = svm_best.predict_proba(X_train)
+    y_pred_train = (y_prob_train[:, 1] >= threshold).astype('int')
     accuracy = accuracy_score(y_train, y_pred_train)
     precision = precision_score(y_train, y_pred_train)
     recall = recall_score(y_train, y_pred_train)
@@ -172,8 +189,8 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
 
 
     # Evaluate the best estimator on X_val and y_val - HUADONG Cohort
-    y_val_pred = svm_best.predict(X_val)
-
+    y_val_prob = svm_best.predict_proba(X_val)
+    y_val_pred = (y_val_prob[:, 1] >= threshold).astype('int')
     #compute the metrics on the validation set
     accuracy = accuracy_score(y_val, y_val_pred)
     precision = precision_score(y_val, y_val_pred)
@@ -188,20 +205,21 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
     best_val_eval = {'accuracy': accuracy, 'precision': precision, 'recall': recall, 'roc_auc': roc_auc, 'f1': f1, 'f2': f2}
 
     # Evaluate the best estimator on X_test and y_test
+    y_pred = np.array([])
+    #y_pred = svm_best.predict(X_test)
+    #accuracy = accuracy_score(y_test, y_pred)
+    #precision = precision_score(y_test, y_pred)
+    #recall = recall_score(y_test, y_pred)
+    #roc_auc = roc_auc_score(y_test, y_pred)
+    #f1 = f1_score(y_test, y_pred)
+    #f2 = fbeta_score(y_test, y_pred, beta=2)#
 
-    y_pred = svm_best.predict(X_test)
-    accuracy = accuracy_score(y_test, y_pred)
-    precision = precision_score(y_test, y_pred)
-    recall = recall_score(y_test, y_pred)
-    roc_auc = roc_auc_score(y_test, y_pred)
-    f1 = f1_score(y_test, y_pred)
-    f2 = fbeta_score(y_test, y_pred, beta=2)
-
-    test_scores.append({'file': file_name, 'params': best_params,
-                       'accuracy': accuracy, 'precision': precision,
-                       'recall': recall, 'roc_auc': roc_auc, 'f1': f1, 'f2': f2})
-
-    best_test_set_res = {'accuracy': accuracy, 'precision': precision, 'recall': recall, 'roc_auc': roc_auc, 'f1': f1, 'f2': f2}
+    #test_scores.append({'file': file_name, 'params': best_params,
+     #                  'accuracy': accuracy, 'precision': precision,
+      #                 'recall': recall, 'roc_auc': roc_auc, 'f1': f1, 'f2': f2})
+#
+ #   best_test_set_res = {'accuracy': accuracy, 'precision': precision, 'recall': recall, 'roc_auc': roc_auc, 'f1': f1, 'f2': f2}
+    best_test_set_res= pd.DataFrame()
     best_auroc_params = best_params_cv
 
     # Return the results
@@ -219,9 +237,9 @@ def visualize_results(test_scores, data_name, group, file_name, y_train, y_train
     #sensitivity_plot(min_samples_split_mean_metrics, data_name, file_name)
     #sensitivity_plot(min_samples_leaf_mean_metrics, data_name, file_name)
     #sensitivity_plot(class_weight_mean_metrics, data_name, file_name)
-    cm_plot(y_train, y_train_pred, data_name, group, file_name, "train", "SVM")
-    cm_plot(y_test, y_pred, data_name, group, file_name, "test", "SVM")
-    cm_plot(y_val, y_pred_val, data_name, group, file_name, "val", "SVM")
+    cm_plot(y_train, y_train_pred, data_name, group, file_name, "train", "SVM", final=False, fal=False, fal_type=None)
+    #cm_plot(y_test, y_pred, data_name, group, file_name, "test", "SVM")
+    cm_plot(y_val, y_pred_val, data_name, group, file_name, "val", "SVM", final=False, fal=False, fal_type=None)
 
 def create_results_table(full_results):
     df = pd.DataFrame(columns=['Group'])
@@ -277,7 +295,7 @@ def run_rf_tuning(data_name, filepath, group, select_features = True):
     X_val = pd.DataFrame()
 
     for key in data:
-        #if key == "genus_relative" or key == "family_relative":
+        # if key == "genus_relative" or key == "family_relative":
         # X_train, X_test, y_train, y_test = preprocess_data(data[key], yang_metadata_path) #preprocess_fudan_data?
         if group == "all":
             X_train_1, X_test_1, y_train, y_test = preprocess_data(data[key], yang_metadata_path)
@@ -286,10 +304,14 @@ def run_rf_tuning(data_name, filepath, group, select_features = True):
             X_val_1 = pd.concat([X_h1, X_h2])
             y_val = y_h1 + y_h2
         elif group == 'young' or group == 'old':
-            X_train_1, X_test_1, X_val_1, y_train, y_test, y_val = full_preprocessing_y_o_labels(data,huadong_data1, huadong_data2, key,yang_metadata_path,young_old_labels_path,group)
+            X_train_1, X_test_1, X_val_1, y_train, y_test, y_val = full_preprocessing_y_o_labels(data, huadong_data1,
+                                                                                                 huadong_data2, key,
+                                                                                                 yang_metadata_path,
+                                                                                                 young_old_labels_path,
+                                                                                                 group)
 
         X_train = pd.concat([X_train, X_train_1], axis=1)
-        X_test = pd.concat([X_test, X_test_1], axis=1)
+        # X_test = pd.concat([X_test, X_test_1], axis=1)
         X_val = pd.concat([X_val, X_val_1], axis=1)
 
     if select_features == False:
@@ -297,55 +319,57 @@ def run_rf_tuning(data_name, filepath, group, select_features = True):
 
     if select_features == True:
         file_name = "selected_features"
-        #top_features = calculate_feature_importance(X_train, y_train, group)
-        #top_features_names = list(map(lambda x: x[0], top_features))
-        #print(top_features_names)
-        #X_train = X_train[top_features_names]
-        #X_train.to_csv('data/selected_features_old.csv')
-        #common_cols_f = set(X_test.columns).intersection(X_train.columns)
-        #common_cols_fv = set(X_val.columns).intersection(X_train.columns)
-        #X_test = X_test[common_cols_f]
-        #X_val = X_val[common_cols_fv]
-        X_test = select_features_from_paper(X_test, group, key)
+        # top_features = calculate_feature_importance(X_train, y_train, group)
+        # top_features_names = list(map(lambda x: x[0], top_features))
+        # print(top_features_names)
+        # X_train = X_train[top_features_names]
+        # X_train.to_csv('data/selected_features_old.csv')
+        # common_cols_f = set(X_test.columns).intersection(X_train.columns)
+        # common_cols_fv = set(X_val.columns).intersection(X_train.columns)
+        # X_test = X_test[common_cols_f]
+        # X_val = X_val[common_cols_fv]
+        # X_test = select_features_from_paper(X_test, group, key)
         X_train = select_features_from_paper(X_train, group, key)
         X_val = select_features_from_paper(X_val, group, key)
 
+    # common_cols_t = set(X_test.columns).intersection(X_val.columns)
+    common_cols_v = set(X_val.columns).intersection(X_train.columns)
 
-
-    common_cols_t = set(X_test.columns).intersection(X_val.columns)
-    common_cols_v = set(X_val.columns).intersection(X_test.columns)
-
-
-    #filling missing values in huadong cohort with zeros
-    #as two files are concatenated for huadong cohort files
-    #they contain columns that are not compatible
-    #thus creating missing values - they are replaced with 0 as it means the abundace of that bacteria is anyway 0
+    # filling missing values in huadong cohort with zeros
+    # as two files are concatenated for huadong cohort files
+    # they contain columns that are not compatible
+    # thus creating missing values - they are replaced with 0 as it means the abundace of that bacteria is anyway 0
     X_val = X_val.fillna(0)
     X_val = X_val[common_cols_v]
-    X_train = X_train[common_cols_t]
-    X_test = X_test[common_cols_t]
-    X_train = X_train.append(X_test)
-    y_train = y_train + y_test
-    #corr = X_train.corr()
-    #X_train = remove_correlated_features(X_train, 0.98)
-    #common_cols_t = set(X_test.columns).intersection(X_train.columns)
-    #common_cols_v = set(X_val.columns).intersection(X_train.columns)
-    #X_val = X_val[common_cols_v]
-    #X_test = X_test[common_cols_t]
+    X_train = X_train[common_cols_v]
+    # X_test = X_test[common_cols_t]
+    # X_train = X_train.append(X_test)
+    # y_train = y_train + y_test
+    # corr = X_train.corr()
+    # X_train = remove_correlated_features(X_train, 0.95)
+    # common_cols_t = set(X_test.columns).intersection(X_train.columns)
+    # common_cols_v = set(X_val.columns).intersection(X_train.columns)
+    # X_val = X_val[common_cols_v]
+    # X_test = X_test[common_cols_t]
 
     print("number of features: ", X_train.shape[1])
     print("number of samples in training set: ", len(X_train))
-    print("number of samples in test set: ", len(X_test))
+    # print("number of samples in test set: ", len(X_test))
     print("number of samples in validation set: ", len(X_val))
-
 
     print(f"Running experiments on {group} samples")
 
     scaler = MinMaxScaler()
     scaler.fit(X_train)
     X_train = scaler.transform(X_train)
-    X_test = scaler.transform(X_test)
+    # X_test = scaler.transform(X_test)
     X_val = scaler.transform(X_val)
+
+
+
+
+    print(f"Running experiments on {group} samples")
+
 
     train_scores, scores, val_scores, best_results_train, best_results_test, best_estimator, best_auroc_params, best_results_on_val, y_train_pred, y_pred, y_val_pred = grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, file_name, group)
     if select_features == True:
@@ -367,7 +391,7 @@ def run_rf_tuning(data_name, filepath, group, select_features = True):
         f.write(str(best_auroc_params))
 
     best_results_train = create_results_table(full_results_train)
-    best_results_test = create_results_table(full_results_test)
+    #best_results_test = create_results_table(full_results_test)
     best_results_val = create_results_table(full_results_val)
     untuned_params = ['oob_score', 'min_weight_fraction_leaf', 'bootstrap',
                         'ccp_alpha', 'class_weight', 'min_impurity_decrease',
@@ -382,7 +406,7 @@ def run_rf_tuning(data_name, filepath, group, select_features = True):
     #save_result_table(results_test_table, data_name, file_name, group, table_name="best_results_test")
     #save_result_table(results_val_table, data_name, file_name, group, table_name="best_results_val")
 
-#run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='young', select_features=True)
+run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='young', select_features=True)
 #run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='old', select_features=True)
 #run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='all', select_features=True)
 #run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='young', select_features=False)
