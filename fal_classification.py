@@ -25,7 +25,7 @@ import matplotlib
 from matplotlib import pyplot as plt
 np.random.seed(43)
 
-from visualization import plot_conf_int, cm_plot, prob_boxplot
+from visualization import plot_conf_int, cm_plot, prob_boxplot, plot_prob_histogram
 
 FUDAN = 'fudan'
 HUADONG1 = 'huadong1'
@@ -262,11 +262,29 @@ def perform_classification(X_train, X_test, X_val, y_train, y_test, y_val, param
 
     results_df = pd.DataFrame()
     if clf_name == "SVM":
+        if group == 'young':
+            threshold = 0.48
+        if group == 'old':
+            threshold = 0.50
+        if group == 'all':
+            threshold = 0.49
         clf = svm.SVC(**params)
     elif clf_name == "XGB":
         clf = xgboost.XGBClassifier(**params)
+        if group == 'young':
+            threshold = 0.48
+        if group == 'old':
+            threshold = 0.50
+        if group == 'all':
+            threshold = 0.49
     elif clf_name == "KNN":
         clf = KNeighborsClassifier(**params)
+        if group == 'young':
+            threshold = 0.48
+        if group == 'old':
+            threshold = 0.50
+        if group == 'all':
+            threshold = 0.49
 
     #clf.fit(X_train, y_train)
 
@@ -275,20 +293,14 @@ def perform_classification(X_train, X_test, X_val, y_train, y_test, y_val, param
     val_results = pd.DataFrame()
     clf.fit(X_train, y_train)
 
-    if group == 'young' and file_name == 'all_features':
-        threshold = 0.58
-    if group == 'young' and file_name == 'selected_features':
-        threshold = 0.56
-    if group == 'old' and file_name == 'selected_features':
-        threshold = 0.37
-    if group == 'old' and file_name == 'all_features':
-        threshold = 0.475
-    if group== 'all':
-        threshold = 0.475
+
 
     y_train_prob = clf.predict_proba(X_train)
 
     y_val_prob = clf.predict_proba(X_val)
+
+    plot_prob_histogram(y_train, y_train_prob, clf_name, 10, FUDAN, group, file_name, 'train', fal, fal_type)
+    plot_prob_histogram(y_val, y_val_prob, clf_name, 10, FUDAN, group, file_name, 'val', fal, fal_type)
     y_train_pred = (y_train_prob[:, 1] >= threshold).astype('int')
     y_val_pred = (y_val_prob[:, 1] >= threshold).astype('int')
 
@@ -342,6 +354,7 @@ def perform_classification(X_train, X_test, X_val, y_train, y_test, y_val, param
     ci_val = [interval_low, interval_high]
     cm = confusion_matrix(y_val, y_val_pred)
     print(cm)
+    print(roc_auc_val)
     TP = cm[0][0]
     FP = cm[0][1]
     FN = cm[1][0]
@@ -433,27 +446,27 @@ def get_results(data_name, filepath, group, select_features, clf_name, fal, fal_
 def svm_results(data_name=FUDAN, fudan_filepath = fudan_filepath):
     #OLD SVM ___ SELECTED FEATURES ___
     otf = get_results(data_name, fudan_filepath, 'old', select_features=True, clf_name = "SVM", fal=False, fal_type='high')
-    #otl = get_results(data_name, fudan_filepath, 'old', select_features=True, clf_name = "SVM", fal=True, fal_type='low')
-    #otm = get_results(data_name, fudan_filepath, 'old', select_features=True, clf_name = "SVM", fal=True, fal_type='medium')
-    #oth = get_results(data_name, fudan_filepath, 'old', select_features=True, clf_name = "SVM", fal=True, fal_type='high')
+    otl = get_results(data_name, fudan_filepath, 'old', select_features=True, clf_name = "SVM", fal=True, fal_type='low')
+    otm = get_results(data_name, fudan_filepath, 'old', select_features=True, clf_name = "SVM", fal=True, fal_type='medium')
+    oth = get_results(data_name, fudan_filepath, 'old', select_features=True, clf_name = "SVM", fal=True, fal_type='high')
 
     #OLD SVM ___ ALL FEATURES ___
     off = get_results(data_name, fudan_filepath, 'old', select_features=False, clf_name = "SVM", fal=False, fal_type='high')
-    #ofl = get_results(data_name, fudan_filepath, 'old', select_features=False, clf_name = "SVM", fal=True, fal_type='low')
-    #ofm = get_results(data_name, fudan_filepath, 'old', select_features=False, clf_name = "SVM", fal=True, fal_type='medium')
-    #ofh = get_results(data_name, fudan_filepath, 'old', select_features=False, clf_name = "SVM", fal=True, fal_type='high')
+    ofl = get_results(data_name, fudan_filepath, 'old', select_features=False, clf_name = "SVM", fal=True, fal_type='low')
+    ofm = get_results(data_name, fudan_filepath, 'old', select_features=False, clf_name = "SVM", fal=True, fal_type='medium')
+    ofh = get_results(data_name, fudan_filepath, 'old', select_features=False, clf_name = "SVM", fal=True, fal_type='high')
 
     #YOUNG SVM ___ SELECTED FEATURES ___
     ytf = get_results(data_name, fudan_filepath, 'young', select_features=True, clf_name = "SVM", fal=False, fal_type='high')
-    #ytl = get_results(data_name, fudan_filepath, 'young', select_features=True, clf_name = "SVM", fal=True, fal_type='low')
-    #ytm = get_results(data_name, fudan_filepath, 'young', select_features=True, clf_name = "SVM", fal=True, fal_type='medium')
-    #yth = get_results(data_name, fudan_filepath, 'young', select_features=True, clf_name = "SVM", fal=True, fal_type='high')
+    ytl = get_results(data_name, fudan_filepath, 'young', select_features=True, clf_name = "SVM", fal=True, fal_type='low')
+    ytm = get_results(data_name, fudan_filepath, 'young', select_features=True, clf_name = "SVM", fal=True, fal_type='medium')
+    yth = get_results(data_name, fudan_filepath, 'young', select_features=True, clf_name = "SVM", fal=True, fal_type='high')
 
     #YOUNG SVM ___ ALL FEATURES ___
     yff = get_results(data_name, fudan_filepath, 'young', select_features=False, clf_name = "SVM", fal=False, fal_type='high')
-    #yfl = get_results(data_name, fudan_filepath, 'young', select_features=False, clf_name = "SVM", fal=True, fal_type='low')
-    #yfm = get_results(data_name, fudan_filepath, 'young', select_features=False, clf_name = "SVM", fal=True, fal_type='medium')
-    #yfh = get_results(data_name, fudan_filepath, 'young', select_features=False, clf_name = "SVM", fal=True, fal_type='high')
+    yfl = get_results(data_name, fudan_filepath, 'young', select_features=False, clf_name = "SVM", fal=True, fal_type='low')
+    yfm = get_results(data_name, fudan_filepath, 'young', select_features=False, clf_name = "SVM", fal=True, fal_type='medium')
+    yfh = get_results(data_name, fudan_filepath, 'young', select_features=False, clf_name = "SVM", fal=True, fal_type='high')
 
     #ALL SVM ___ SELECTED FEATURES ___
     atf = get_results(data_name, fudan_filepath, 'all', select_features=True, clf_name = "SVM", fal=False, fal_type='high')
@@ -604,8 +617,8 @@ def xgb_results(data_name=FUDAN, fudan_filepath=fudan_filepath):
     return xgb_res
 
 rf_res = rf_results()
-#svm_res = svm_results()
-#xgb_res = xgb_results()
+svm_res = svm_results()
+xgb_res = xgb_results()
 #knn_res = knn_results()
 """
 result_mega_table = pd.concat([rf_res, svm_res, xgb_res, knn_res])

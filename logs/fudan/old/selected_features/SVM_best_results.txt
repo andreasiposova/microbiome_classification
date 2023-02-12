@@ -1,9 +1,8 @@
-\begin{tabular}{llllllllllll}
+\begin{tabular}{llllllllllllll}
 \toprule
-{} &              Group &   C & gamma & kernel & random\_state &  accuracy & precision &    recall &   roc\_auc &        f1 &        f2 \\
+{} &              Group &    C & gamma &  kernel & max\_iter & probability & random\_state &  accuracy & precision &    recall &   roc\_auc &        f1 &        f2 \\
 \midrule
-0 &  selected\_features &  10 &     1 &    rbf &         1234 &  0.883028 &  0.855469 &  0.939914 &  0.878824 &  0.895706 &  0.921717 \\
-0 &  selected\_features &  10 &     1 &    rbf &         1234 &  0.877863 &  0.864198 &  0.933333 &  0.868452 &  0.897436 &  0.918635 \\
-0 &  selected\_features &  10 &     1 &    rbf &         1234 &  0.671717 &  0.789855 &  0.751724 &  0.602277 &  0.770318 &  0.759053 \\
+0 &  selected\_features &  0.1 &   0.1 &  linear &      200 &        True &         1234 &  0.743119 &  0.715302 &  0.862661 &  0.734286 &  0.782101 &  0.828524 \\
+0 &  selected\_features &  0.1 &   0.1 &  linear &      200 &        True &         1234 &  0.570707 &  0.857143 &  0.496552 &  0.635068 &  0.628821 &  0.542169 \\
 \bottomrule
 \end{tabular}

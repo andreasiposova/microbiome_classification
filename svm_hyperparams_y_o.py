@@ -39,12 +39,13 @@ young_old_labels_path = 'data/Yang_PRJNA763023/SraRunTable.csv'
 
 
 def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, file_name, group):
-    c = [0.1, 0.01, 1] # np.arange(5, 35, 3, dtype=int),
-    gamma = [0.5, 0.2, 0.1, 0.01, 0.001, 0.00001]  # np.arange(2, 12, 3, dtype=int),
+    c = [0.001, 0.01, 0.05, 0.1]
+    gamma = [0.1, 0.01, 0.001] #, 'scale', 'auto'] # np.arange(2, 12, 3, dtype=int),
     kernel = ['sigmoid', 'poly', 'linear', 'rbf'] #, 'poly',
     subsample = [0.5]
     random_state = [1234]
     probability = [True]
+    max_iter = [250]
 
     if group == "old":
         param_grid = {
@@ -52,6 +53,7 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
             'gamma': gamma,
             'kernel': kernel,
             'probability': probability,
+            'max_iter': max_iter,
             'random_state': random_state
         }
 
@@ -61,6 +63,7 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
             'gamma': gamma,
             'kernel': kernel,
             'probability': probability,
+            'max_iter': max_iter,
             'random_state': random_state
             }
 
@@ -70,6 +73,7 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
             'C': c,
             'gamma': gamma,
             'kernel': kernel,
+            'max_iter': max_iter,
             'random_state': random_state,
             'probability': probability
         }
@@ -78,6 +82,7 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
     scoring = {
         'roc_auc': make_scorer(roc_auc_score),
         'accuracy': make_scorer(accuracy_score),
+        'recall': make_scorer(recall_score)
         #'precision': make_scorer(accuracy_score),
         #'f1': make_scorer(f1_score)
     }
@@ -105,24 +110,18 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
     results = grid_search.cv_results_
 
 
-    early_stopping() #implemet
-
 
     train_scores_gridsearch = results.get('mean_train_roc_auc')
     test_scores_gridsearch = results.get('mean_test_roc_auc')
 
     grid_search_train_test_plot(train_scores_gridsearch, test_scores_gridsearch, data_name, group, file_name, "SVM")
 
-    if group == 'young' and file_name == 'all_features':
-        threshold = 0.58
-    if group == 'young' and file_name == 'selected_features':
-        threshold = 0.56
-    if group == 'old' and file_name == 'selected_features':
-        threshold = 0.37
-    if group == 'old' and file_name == 'all_features':
-        threshold = 0.475
+    if group == 'young':
+        threshold = 0.48
+    if group == 'old':
+        threshold = 0.5
     if group== 'all':
-        threshold = 0.475
+        threshold = 0.5
 
     test_scores = []
 
