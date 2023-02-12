@@ -1,1 +1,1 @@
-{'class_weight': 'balanced_subsample', 'max_depth': 2, 'max_features': 'sqrt', 'min_samples_leaf': 2, 'min_samples_split': 2, 'n_estimators': 24, 'random_state': 1234}
+{'class_weight': 'balanced_subsample', 'max_depth': 3, 'max_features': 'log2', 'min_samples_leaf': 8, 'min_samples_split': 6, 'n_estimators': 800, 'random_state': 1234}

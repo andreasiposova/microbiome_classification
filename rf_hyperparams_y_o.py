@@ -61,11 +61,11 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
             """
     if group == "young":
         param_grid = {
-            'n_estimators': np.arange(900, 1300, 50, dtype=int),
-            'max_depth': np.arange(7, 9, 1, dtype=int),
-            'min_samples_split': np.arange(9, 20, 3, dtype=int),
-            'min_samples_leaf': np.arange(10, 12, 2, dtype=int),
-            #'max_features': ['sqrt', 'log2'],  # 'sqrt', 'log2'],
+            'n_estimators': np.arange(200, 810, 100, dtype=int),
+            'max_depth': np.arange(2, 4, 1, dtype=int),
+            'min_samples_split': np.arange(6, 16, 2, dtype=int),
+            'min_samples_leaf': np.arange(6, 16, 2, dtype=int),
+            'max_features': ['sqrt', 'log2'],  # 'sqrt', 'log2'],
             'random_state': [1234],
             'class_weight': ['balanced_subsample']
         }
@@ -164,10 +164,23 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
 
     #best_estimator_params_on_train = best_estimator.get_params()
     train_scores = []
-
+    if group == 'young': #and file_name == 'all_features':
+        threshold = 0.56
+    #if group == 'young' and file_name == 'selected_features':
+        #threshold = 0.56
+    if group == 'old': #and file_name == 'selected_features':
+        threshold = 0.4 #0.37
+    #if group == 'old' and file_name == 'all_features':
+     #   threshold = 0.475
+    if group== 'all':
+        threshold = 0.475
     # get the scores for the fit on the train set
     rf_best = RandomForestClassifier(**best_params)
     rf_best.fit(X_train, y_train)
+
+    y_prob_train = rf_best.predict_proba(X_train)
+    y_pred_train = (y_prob_train[:, 1] >= threshold).astype('int')
+
 
     y_pred_train = rf_best.predict(X_train)
     accuracy = accuracy_score(y_train, y_pred_train)
@@ -188,7 +201,9 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
 
 
     # Evaluate the best estimator on X_val and y_val - HUADONG Cohort
-    y_val_pred = rf_best.predict(X_val)
+    #y_val_pred = rf_best.predict(X_val)
+    y_prob_val = rf_best.predict_proba(X_val)
+    y_val_pred = (y_prob_val[:, 1] >= threshold).astype('int')
 
     #compute the metrics on the validation set
     accuracy = accuracy_score(y_val, y_val_pred)
@@ -400,7 +415,7 @@ def run_rf_tuning(data_name, filepath, group, select_features = True):
     #save_result_table(results_test_table, data_name, file_name, group, table_name="best_results_test")
     #save_result_table(results_val_table, data_name, file_name, group, table_name="best_results_val")
 
-#run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='young', select_features=True)
+run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='young', select_features=True)
 #run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='old', select_features=True)
 #run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='all', select_features=True)
 run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='young', select_features=False)

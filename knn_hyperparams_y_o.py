@@ -42,8 +42,8 @@ young_old_labels_path = 'data/Yang_PRJNA763023/SraRunTable.csv'
 
 
 def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, file_name, group):
-    n_neighbors = [392] #list(np.arange(20, 30, 1, dtype=int))
-    leaf_size = [400] #list(np.arange(12, 20, 1))
+    n_neighbors = list(np.arange(151, 392, 11, dtype=int))
+    leaf_size = [30] #list(np.arange(1, 2, 1))
     p = [1, 2]
     weights = ['uniform', 'distance']
     metric = ['minkowski']
@@ -146,7 +146,16 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
     #best_auroc_params = max(results_auroc, key= lambda x: x['roc_auc'])
     #best_params = best_auroc_params['params']
     best_params = best_params_cv
-
+    if group == 'young': #and file_name == 'all_features':
+        threshold = 0.52
+    #if group == 'young' and file_name == 'selected_features':
+        #threshold = 0.56
+    if group == 'old': #and file_name == 'selected_features':
+        threshold = 0.4 #0.37
+    #if group == 'old' and file_name == 'all_features':
+     #   threshold = 0.475
+    if group== 'all':
+        threshold = 0.475
     #best_estimator_params_on_train = best_estimator.get_params()
     train_scores = []
 
@@ -154,7 +163,10 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
     knn_best = KNeighborsClassifier(**best_params)
     knn_best.fit(X_train, y_train)
 
-    y_pred_train = knn_best.predict(X_train)
+    #y_pred_train = knn_best.predict(X_train)
+    y_prob_train = knn_best.predict_proba(X_train)
+    y_pred_train = (y_prob_train[:, 1] >= threshold).astype('int')
+
     accuracy = accuracy_score(y_train, y_pred_train)
     precision = precision_score(y_train, y_pred_train)
     recall = recall_score(y_train, y_pred_train)
@@ -173,7 +185,9 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
 
 
     # Evaluate the best estimator on X_val and y_val - HUADONG Cohort
-    y_val_pred = knn_best.predict(X_val)
+    y_prob_val = knn_best.predict_proba(X_val)
+    y_val_pred = (y_prob_val[:, 1] >= threshold).astype('int')
+    #y_val_pred = knn_best.predict(X_val)
 
     #compute the metrics on the validation set
     accuracy = accuracy_score(y_val, y_val_pred)
@@ -189,7 +203,8 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
     best_val_eval = {'accuracy': accuracy, 'precision': precision, 'recall': recall, 'roc_auc': roc_auc, 'f1': f1, 'f2': f2}
 
     # Evaluate the best estimator on X_test and y_test
-
+    y_pred = np.array([])
+    """
     y_pred = knn_best.predict(X_test)
     accuracy = accuracy_score(y_test, y_pred)
     precision = precision_score(y_test, y_pred)
@@ -203,6 +218,8 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
                        'recall': recall, 'roc_auc': roc_auc, 'f1': f1, 'f2': f2})
 
     best_test_set_res = {'accuracy': accuracy, 'precision': precision, 'recall': recall, 'roc_auc': roc_auc, 'f1': f1, 'f2': f2}
+    """
+    best_test_set_res = pd.DataFrame()
     best_auroc_params = best_params_cv
 
     # Return the results
@@ -220,9 +237,9 @@ def visualize_results(test_scores, data_name, group, file_name, y_train, y_train
     #sensitivity_plot(min_samples_split_mean_metrics, data_name, file_name)
     #sensitivity_plot(min_samples_leaf_mean_metrics, data_name, file_name)
     #sensitivity_plot(class_weight_mean_metrics, data_name, file_name)
-    cm_plot(y_train, y_train_pred, data_name, group, file_name, "train", "KNN")
-    cm_plot(y_test, y_pred, data_name, group, file_name, "test", "KNN")
-    cm_plot(y_val, y_pred_val, data_name, group, file_name, "val", "KNN")
+    cm_plot(y_train, y_train_pred, data_name, group, file_name, "train", "KNN", final=False, fal=False, fal_type=None)
+    cm_plot(y_test, y_pred, data_name, group, file_name, "test", "KNN", final=False, fal=False, fal_type=None)
+    cm_plot(y_val, y_pred_val, data_name, group, file_name, "val", "KNN", final=False, fal=False, fal_type=None)
 
 def create_results_table(full_results):
     df = pd.DataFrame(columns=['Group'])
@@ -313,8 +330,8 @@ def run_rf_tuning(data_name, filepath, group, select_features = True):
 
 
 
-    common_cols_t = set(X_test.columns).intersection(X_val.columns)
-    common_cols_v = set(X_val.columns).intersection(X_test.columns)
+    common_cols_t = set(X_train.columns).intersection(X_val.columns)
+    common_cols_v = set(X_val.columns).intersection(X_train.columns)
 
 
     #filling missing values in huadong cohort with zeros
@@ -324,10 +341,10 @@ def run_rf_tuning(data_name, filepath, group, select_features = True):
     X_val = X_val.fillna(0)
     X_val = X_val[common_cols_v]
     X_train = X_train[common_cols_t]
-    X_test = X_test[common_cols_t]
-    X_train = X_train.append(X_test)
+    #X_test = X_test[common_cols_t]
+    #X_train = X_train.append(X_test)
     #X_train = X_train.fillna(0)
-    y_train = y_train + y_test
+    #y_train = y_train + y_test
     #corr = X_train.corr()
     #X_train = remove_correlated_features(X_train, 0.98)
     #common_cols_t = set(X_test.columns).intersection(X_train.columns)
@@ -346,19 +363,19 @@ def run_rf_tuning(data_name, filepath, group, select_features = True):
     scaler = MinMaxScaler()
     scaler.fit(X_train)
     X_train = scaler.transform(X_train)
-    X_test = scaler.transform(X_test)
+    #X_test = scaler.transform(X_test)
     X_val = scaler.transform(X_val)
 
     train_scores, scores, val_scores, best_results_train, best_results_test, best_estimator, best_auroc_params, best_results_on_val, y_train_pred, y_pred, y_val_pred = grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, file_name, group)
     if select_features == True:
         full_results_train.append(['selected_features', best_estimator, best_results_train])
-        full_results_test.append(['selected_features', best_estimator, best_results_test])
+        #full_results_test.append(['selected_features', best_estimator, best_results_test])
         full_results_val.append(['selected_features', best_estimator, best_results_on_val])
         visualize_results(scores, data_name, group, 'selected_features', y_train, y_train_pred, y_test, y_pred, y_val, y_val_pred)
 
     if select_features == False:
         full_results_train.append(['all_features', best_estimator, best_results_train])
-        full_results_test.append(['all_features', best_estimator, best_results_test])
+        #full_results_test.append(['all_features', best_estimator, best_results_test])
         full_results_val.append(['all_features', best_estimator, best_results_on_val])
         visualize_results(scores, data_name, group, 'all_features', y_train, y_train_pred, y_test, y_pred,
                           y_val, y_val_pred)
@@ -369,14 +386,14 @@ def run_rf_tuning(data_name, filepath, group, select_features = True):
         f.write(str(best_auroc_params))
 
     best_results_train = create_results_table(full_results_train)
-    best_results_test = create_results_table(full_results_test)
+    #best_results_test = create_results_table(full_results_test)
     best_results_val = create_results_table(full_results_val)
     untuned_params = ['oob_score', 'min_weight_fraction_leaf', 'bootstrap',
                         'ccp_alpha', 'class_weight', 'min_impurity_decrease',
                         'min_impurity_split', 'max_leaf_nodes', 'max_samples',
                         'verbose', 'warm_start']
     results_train_table = results_train_table.append(best_results_train)
-    results_test_table = results_test_table.append(best_results_test)
+    #results_test_table = results_test_table.append(best_results_test)
     results_val_table = results_val_table.append(best_results_val)
 #   results_test_table.drop(untuned_params, inplace=True, axis=1)
 #   results_val_table.drop(untuned_params, inplace=True, axis=1)

@@ -128,8 +128,8 @@ def sensitivity_plot(hp_mean_metrics, data_name, group, file_name):
 
 def cm_plot(y_test, y_pred, data_name, group, file_name, test_or_val, clf_name, final, fal, fal_type):
     if final==True:
-        if not os.path.exists(str(Config.PLOTS_DIR) + "/" + str(data_name) + "/" + "final_results/" + group + "/" + str(file_name)):
-            os.makedirs(os.path.join(Config.PLOTS_DIR, data_name, "final_results", group, file_name))
+        if not os.path.exists(str(Config.PLOTS_DIR) + "/" + str(data_name) + "/" + "final_results/" + group + "/" + str(file_name) + "/" + clf_name):
+            os.makedirs(os.path.join(Config.PLOTS_DIR, data_name, "final_results", group, file_name, clf_name))
 
         label_mapping = {'healthy': 0, 'CRC': 1}
         reverse_mapping = {value: key for key, value in label_mapping.items()}
@@ -139,13 +139,15 @@ def cm_plot(y_test, y_pred, data_name, group, file_name, test_or_val, clf_name, 
         cm = confusion_matrix(y_test, y_pred, labels=labels)
         plt.figure(figsize=(7, 5))
         disp = ConfusionMatrixDisplay(cm, display_labels=labels)
-        disp.plot()
+        #y_prob_train = rf_best.predict_proba(X_train)
+
+        disp.plot(cmap = 'GnBu')
         plt.title(file_name)
         if fal==True:
-            plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, "final_results", group, file_name,
+            plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, "final_results", group, file_name, clf_name,
                                      f"{clf_name}_best_estimator_{test_or_val}_fal_{fal_type}_cm.png"))
         if fal==False:
-            plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, "final_results", group, file_name,
+            plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, "final_results", group, file_name, clf_name,
                                      f"{clf_name}_best_estimator_{test_or_val}_cm.png"))
         plt.close()
     else:
@@ -161,7 +163,7 @@ def cm_plot(y_test, y_pred, data_name, group, file_name, test_or_val, clf_name, 
         cm = confusion_matrix(y_test, y_pred, labels=labels)
         plt.figure(figsize=(7, 5))
         disp = ConfusionMatrixDisplay(cm, display_labels=labels)
-        disp.plot()
+        disp.plot(cmap='GnBu')
         plt.title(file_name)
         plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, group, file_name, f"{clf_name}_best_estimator_{test_or_val}_cm.png"))
         plt.close()
@@ -214,7 +216,7 @@ def create_scores_dataframe(grid_clf, param_name, num_results=15, negative=True,
         os.path.join(os.path.join(Config.PLOTS_DIR, data_name, f"sensitivity/{param}_rf_sensitivity_test.png")))
     plt.close()
 """
-def plot_conf_int(y_true, y_pred, X_train, X_pred, clf, data_name, file_name, group, fal, fal_type, set_name):
+def plot_conf_int(y_true, y_pred, X_train, X_pred, clf, data_name, file_name, group, fal, fal_type, set_name, bins):
 
     if not os.path.exists(str(Config.PLOTS_DIR) + "/" + str(data_name) + "/final_results/" + str(group) + "/" + str(file_name) + "/RF"):
         os.makedirs(os.path.join(Config.PLOTS_DIR, data_name, "final_results", group, file_name, "RF"))
@@ -223,10 +225,11 @@ def plot_conf_int(y_true, y_pred, X_train, X_pred, clf, data_name, file_name, gr
     idx_healthy = np.where(y_true == 0)[0]
 
     fig, ax = plt.subplots(1)
-    ax.hist(y_pred[idx_crc, 1], histtype='step', label='CRC', color='orange')
-    ax.hist(y_pred[idx_healthy, 1], histtype='step', label='healthy', color='blue')
+    ax.hist(y_pred[idx_crc, 1], histtype='step', bins = bins, label='CRC', color='#fdb88e')
+    ax.hist(y_pred[idx_healthy, 1], histtype='step', label='healthy', color='#84cdfc')
     ax.set_xlabel('Prediction (CRC probability)')
     ax.set_ylabel('Number of observations')
+    ax.set_xlim(0, 1)
     plt.legend()
     if fal == True:
         plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, "final_results", group, file_name, "RF", f"RF_{set_name}_histogram_CI_fal_{fal_type}.png"))
@@ -242,14 +245,15 @@ def plot_conf_int(y_true, y_pred, X_train, X_pred, clf, data_name, file_name, gr
     fig, ax = plt.subplots(1)
     ax.scatter(y_pred[idx_crc, 1],
                np.sqrt(spam_V_IJ_unbiased[idx_crc]),
-               label='CRC', color='orange')
+               label='CRC', color='#fdb88e', alpha=0.7)
 
     ax.scatter(y_pred[idx_healthy, 1],
                np.sqrt(spam_V_IJ_unbiased[idx_healthy]),
-               label='healthy', color='blue')
+               label='healthy', color='#84cdfc', alpha = 0.7)
 
     ax.set_xlabel('Prediction (CRC probability)')
     ax.set_ylabel('Standard deviation')
+    ax.set_xlim(0, 1)
     plt.legend()
     if fal==True:
         plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, "final_results", group, file_name, "RF", f"RF_{set_name}_fal_{fal_type}_scatterplot_CI.png"))
@@ -276,6 +280,7 @@ def prob_boxplot(y_true, probs, data_name, group, file_name, set_name, fal, fal_
         plt.scatter(x, val, alpha=0.2, color=c)
     plt.xlabel("Class", fontweight='normal', fontsize=12)
     plt.ylabel("Predicted POD", fontweight='normal', fontsize=12)
+
     #plt.axhline(y=0.5, color='#b9b9b9', linestyle='--', linewidth=1, label='Threshold Value')
 
 
@@ -341,11 +346,12 @@ def plot_prob_histogram(y_true, y_prob, clf_name, bins, data_name, group, file_n
     probs_CRC = [probs[i] for i, x in enumerate(y_true) if x == 1]
 
     # Plot histograms for each y_pred label
-    plt.hist(probs_healthy, bins=bins, alpha=0.5, histtype='step', label='healthy', color='blue')
-    plt.hist(probs_CRC, bins=bins, alpha=0.5, histtype='step', label='CRC', color='orange')
+    plt.hist(probs_healthy, bins=bins, alpha=0.5, histtype='step', label='healthy', color='#84cdfc', range=(0, 1))
+    plt.hist(probs_CRC, bins=bins, alpha=0.5, histtype='step', label='CRC', color='#fdb88e', range=(0, 1))
+
     plt.legend()
     if not os.path.exists(os.path.join(Config.PLOTS_DIR, data_name, "final_results", group, file_name, clf_name)):
-        os.makedirs(os.path.join(Config.PLOTS_DIR, data_name, "Final_results", group, file_name, clf_name))
+        os.makedirs(os.path.join(Config.PLOTS_DIR, data_name, "final_results", group, file_name, clf_name))
     if fal==True:
         plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, "final_results", group, file_name, clf_name, f"{clf_name}_{set_name}_fal_{fal_type}_histogram.png"))
     else:

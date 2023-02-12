@@ -144,14 +144,14 @@ def perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, pa
     #y_train_pred = clf.predict(X_train)
     #y_test_pred = clf.predict(X_test)
     #y_val_pred = clf.predict(X_val)
-    if group == 'young' and file_name == 'all_features':
-        threshold = 0.58
-    if group == 'young' and file_name == 'selected_features':
+    if group == 'young': #and file_name == 'all_features':
         threshold = 0.56
-    if group == 'old' and file_name == 'selected_features':
-        threshold = 0.37
-    if group == 'old' and file_name == 'all_features':
-        threshold = 0.475
+    #if group == 'young' and file_name == 'selected_features':
+        #threshold = 0.56
+    if group == 'old': #and file_name == 'selected_features':
+        threshold = 0.4 #0.37
+    #if group == 'old' and file_name == 'all_features':
+     #   threshold = 0.475
     if group== 'all':
         threshold = 0.475
 
@@ -177,7 +177,7 @@ def perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, pa
     y_train_prob = clf.predict_proba(X_train)
     prob_boxplot(y_train, y_train_prob, FUDAN, group, file_name, 'train', fal, fal_type)
     y_train_pred = (y_train_prob[:, 1] >= threshold).astype('int')
-    plot_conf_int(y_train, y_train_prob, X_train, X_train, clf, data_name=FUDAN, file_name=file_name, group=group, set_name="train", fal=fal, fal_type=fal_type)
+    plot_conf_int(y_train, y_train_prob, X_train, X_train, clf, data_name=FUDAN, file_name=file_name, group=group, set_name="train", fal=fal, fal_type=fal_type, bins=20)
 
 
     #y_test_prob = clf.predict_proba(X_test)
@@ -187,7 +187,7 @@ def perform_rf_classification(X_train, X_test, X_val, y_train, y_test, y_val, pa
     y_val_prob = clf.predict_proba(X_val)
     y_val_pred = (y_val_prob[:, 1] >= threshold).astype('int')
     prob_boxplot(y_val, y_val_prob, FUDAN, group, file_name, 'val', fal, fal_type)
-    plot_conf_int(y_val, y_val_prob, X_train, X_val, clf, data_name=FUDAN, file_name=file_name, group=group, set_name="val", fal=fal, fal_type=fal_type)
+    plot_conf_int(y_val, y_val_prob, X_train, X_val, clf, data_name=FUDAN, file_name=file_name, group=group, set_name="val", fal=fal, fal_type=fal_type, bins = 20)
 
     acc_train = accuracy_score(y_train, y_train_pred)
     prec_train = precision_score(y_train, y_train_pred)
@@ -280,9 +280,9 @@ def perform_classification(X_train, X_test, X_val, y_train, y_test, y_val, param
     elif clf_name == "KNN":
         clf = KNeighborsClassifier(**params)
         if group == 'young':
-            threshold = 0.48
+            threshold = 0.53
         if group == 'old':
-            threshold = 0.50
+            threshold = 0.48
         if group == 'all':
             threshold = 0.49
 
@@ -299,8 +299,8 @@ def perform_classification(X_train, X_test, X_val, y_train, y_test, y_val, param
 
     y_val_prob = clf.predict_proba(X_val)
 
-    plot_prob_histogram(y_train, y_train_prob, clf_name, 10, FUDAN, group, file_name, 'train', fal, fal_type)
-    plot_prob_histogram(y_val, y_val_prob, clf_name, 10, FUDAN, group, file_name, 'val', fal, fal_type)
+    plot_prob_histogram(y_train, y_train_prob, clf_name, 20, FUDAN, group, file_name, 'train', fal, fal_type)
+    plot_prob_histogram(y_val, y_val_prob, clf_name, 20, FUDAN, group, file_name, 'val', fal, fal_type)
     y_train_pred = (y_train_prob[:, 1] >= threshold).astype('int')
     y_val_pred = (y_val_prob[:, 1] >= threshold).astype('int')
 
@@ -616,8 +616,8 @@ def xgb_results(data_name=FUDAN, fudan_filepath=fudan_filepath):
     xgb_res.to_csv(os.path.join(Config.LOG_DIR, FUDAN, 'final_results/xgb_final_results.csv'))
     return xgb_res
 
-rf_res = rf_results()
-svm_res = svm_results()
+#rf_res = rf_results()
+#svm_res = svm_results()
 xgb_res = xgb_results()
 #knn_res = knn_results()
 """

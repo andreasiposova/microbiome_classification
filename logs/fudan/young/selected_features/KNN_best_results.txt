@@ -2,8 +2,7 @@
 \toprule
 {} &              Group & leaf\_size &     metric & n\_neighbors &  p &  accuracy & precision &    recall &   roc\_auc &        f1 &        f2 \\
 \midrule
-0 &  selected\_features &         2 &  minkowski &           9 &  2 &  0.776632 &      0.76 &  0.797203 &   0.77698 &  0.778157 &  0.789474 \\
-0 &  selected\_features &         2 &  minkowski &           9 &  2 &  0.670455 &  0.888889 &  0.222222 &  0.601496 &  0.355556 &  0.261438 \\
-0 &  selected\_features &         2 &  minkowski &           9 &  2 &  0.728972 &  0.692308 &  0.461538 &  0.671946 &  0.553846 &  0.494505 \\
+0 &  selected\_features &         5 &  minkowski &          19 &  1 &  0.697595 &   0.70073 &  0.671329 &  0.697151 &  0.685714 &   0.67701 \\
+0 &  selected\_features &         5 &  minkowski &          19 &  1 &  0.514019 &  0.377358 &  0.512821 &  0.513763 &  0.434783 &  0.478469 \\
 \bottomrule
 \end{tabular}
