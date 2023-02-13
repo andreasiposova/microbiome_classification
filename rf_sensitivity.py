@@ -115,11 +115,11 @@ def sensitivity_analysis(data_name, filepath, group, select_features = False):
                 X_val_1 = select_features_from_paper(X_val_1, group, key)
 
             X_train = pd.concat([X_train, X_train_1], axis=1)
-            X_test = pd.concat([X_test, X_test_1], axis=1)
+            #X_test = pd.concat([X_test, X_test_1], axis=1)
             X_val = pd.concat([X_val, X_val_1], axis=1)
 
-    common_cols_t = set(X_test.columns).intersection(X_val.columns)
-    common_cols_v = set(X_val.columns).intersection(X_test.columns)
+    common_cols_t = set(X_train.columns).intersection(X_val.columns)
+    common_cols_v = set(X_val.columns).intersection(X_train.columns)
 
     # filling missing values in huadong cohort with zeros
     # as two files are concatenated for huadong cohort files
@@ -128,9 +128,9 @@ def sensitivity_analysis(data_name, filepath, group, select_features = False):
     X_val = X_val.fillna(0)
     X_val = X_val[common_cols_v]
     X_train = X_train[common_cols_t]
-    X_test = X_test[common_cols_t]
-    X_train = X_train.append(X_test)
-    y_train = y_train + y_test
+    #X_test = X_test[common_cols_t]
+    #X_train = X_train.append(X_test)
+    #y_train = y_train + y_test
 
 
 
@@ -138,7 +138,7 @@ def sensitivity_analysis(data_name, filepath, group, select_features = False):
     scaler = MinMaxScaler()
     scaler.fit(X_train)
     X_train = scaler.transform(X_train)
-    X_test = scaler.transform(X_test)
+    #X_test = scaler.transform(X_test)
     X_val = scaler.transform(X_val)
     print('Number of train samples :', len(X_train))
     print('Number of test samples :', len(X_test))
@@ -146,12 +146,12 @@ def sensitivity_analysis(data_name, filepath, group, select_features = False):
 
 
     # define estimator
-    estimator = Pipeline([("model", RandomForestClassifier(n_estimators=2, max_depth=2, min_samples_split=100, min_samples_leaf=20, max_features='sqrt', random_state=1234))]) #n_estimators=30, max_depth=5, min_samples_split=16, min_samples_leaf=20, max_features='sqrt',
+    estimator = Pipeline([("model", RandomForestClassifier(n_estimators=800, max_depth=2, min_samples_split=100, min_samples_leaf=20, max_features='sqrt', random_state=1234))]) #n_estimators=30, max_depth=5, min_samples_split=16, min_samples_leaf=20, max_features='sqrt',
     # define a range of values for the maximum depth
     if group == "old":
         param_ranges = {
-            'n_estimators': [10, 35, 100, 1000, 3000], #np.arange(1, 800, 50, dtype=int),
-            #'max_depth': [5, 10, 20],#np.arange(2, 20, 1, dtype=int),
+            #'n_estimators': [10, 35, 100, 1000, 3000], #np.arange(1, 800, 50, dtype=int),
+            'max_depth': np.arange(2, 70, 3, dtype=int),
             #'min_samples_split': [5, 10, 20], #np.arange(2, 25, 1, dtype=int),
             #'min_samples_leaf': [5, 10, 30], #np.arange(2, 50, 1, dtype=int),
             #'max_features': ['sqrt', 'log2'],  # 'sqrt', 'log2']
@@ -223,13 +223,13 @@ def sensitivity_analysis(data_name, filepath, group, select_features = False):
             #print(model.get_params())
             model.fit(X_train, y_train)
             y_pred_train = model.predict(X_train)
-            y_pred_test = model.predict(X_test)
+#            y_pred_test = model.predict(X_test)
             y_pred_val = model.predict(X_val)
             acc_train, prec_train, rec_train, roc_auc_train, f1_train, f2_train = calculate_performance(y_train, y_pred_train)
-            acc_test, prec_test, rec_test, roc_auc_test, f1_test, f2_test = calculate_performance(y_test, y_pred_test)
+ #          acc_test, prec_test, rec_test, roc_auc_test, f1_test, f2_test = calculate_performance(y_test, y_pred_test)
             acc_val, prec_val, rec_val, roc_auc_val, f1_val, f2_val = calculate_performance(y_val, y_pred_val)
             roc_aucs_train.append(roc_auc_train)
-            roc_aucs_test.append(roc_auc_test)
+            #roc_aucs_test.append(roc_auc_test)
             roc_aucs_val.append(roc_auc_val)
 
             # cross validation results averaged
