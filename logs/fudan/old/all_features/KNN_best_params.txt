@@ -1,0 +1,1 @@
+{'leaf_size': 30, 'metric': 'minkowski', 'n_neighbors': 283, 'p': 1, 'weights': 'distance'}

@@ -1,0 +1,9 @@
+\begin{tabular}{lllllllllllllllll}
+\toprule
+{} &         Group & gamma & learning\_rate & max\_depth & max\_leaves & min\_child\_weight & n\_estimators & random\_state & sample\_pos\_weight & subsample &  accuracy & precision &    recall &   roc\_auc &        f1 &        f2 \\
+\midrule
+0 &  all\_features &     0 &          0.01 &         4 &          4 &               12 &            5 &         1234 &              1.05 &       0.5 &  0.707904 &  0.685897 &  0.748252 &  0.708585 &  0.715719 &   0.73489 \\
+0 &  all\_features &     0 &          0.01 &         4 &          4 &               12 &            5 &         1234 &              1.05 &       0.5 &      0.75 &  0.659091 &  0.805556 &  0.758547 &     0.725 &  0.771277 \\
+0 &  all\_features &     0 &          0.01 &         4 &          4 &               12 &            5 &         1234 &              1.05 &       0.5 &  0.570093 &  0.410256 &  0.410256 &  0.536011 &  0.410256 &  0.410256 \\
+\bottomrule
+\end{tabular}

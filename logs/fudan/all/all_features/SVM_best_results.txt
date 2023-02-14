@@ -1,0 +1,8 @@
+\begin{tabular}{llllllllllllll}
+\toprule
+{} &         Group &    C & gamma &  kernel & max\_iter & probability & random\_state &  accuracy & precision &    recall &   roc\_auc &        f1 &        f2 \\
+\midrule
+0 &  all\_features &  0.1 &   0.1 &  linear &      250 &        True &         1234 &  0.764787 &  0.710472 &  0.920213 &  0.759252 &  0.801854 &   0.86891 \\
+0 &  all\_features &  0.1 &   0.1 &  linear &      250 &        True &         1234 &  0.567213 &  0.724138 &  0.456522 &  0.596029 &      0.56 &  0.492958 \\
+\bottomrule
+\end{tabular}

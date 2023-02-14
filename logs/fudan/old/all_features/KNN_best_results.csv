@@ -1,0 +1,3 @@
+,Group,leaf_size,metric,n_neighbors,p,weights,accuracy,precision,recall,roc_auc,f1,f2
+0,all_features,30,minkowski,283,1,distance,1.0,1.0,1.0,1.0,1.0,1.0
+0,all_features,30,minkowski,283,1,distance,0.7323232323232324,0.7323232323232324,1.0,0.5,0.8454810495626823,0.9318766066838046

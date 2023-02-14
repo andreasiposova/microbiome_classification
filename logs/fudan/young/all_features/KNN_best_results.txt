@@ -1,0 +1,8 @@
+\begin{tabular}{llllllllllll}
+\toprule
+{} &         Group & leaf\_size &     metric & n\_neighbors &  p &  accuracy & precision &    recall &   roc\_auc &        f1 &        f2 \\
+\midrule
+0 &  all\_features &         5 &  minkowski &          16 &  1 &  0.701031 &  0.702899 &  0.678322 &  0.700647 &  0.690391 &  0.683099 \\
+0 &  all\_features &         5 &  minkowski &          16 &  1 &  0.626168 &      0.48 &  0.307692 &  0.558258 &     0.375 &  0.331492 \\
+\bottomrule
+\end{tabular}

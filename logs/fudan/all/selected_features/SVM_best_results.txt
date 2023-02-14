@@ -1,0 +1,9 @@
+\begin{tabular}{llllllllllllll}
+\toprule
+{} &              Group &    C & degree &  gamma &   kernel & probability & shrinking &  accuracy & precision &    recall &   roc\_auc &        f1 &        f2 \\
+\midrule
+0 &  selected\_features &  0.1 &      2 &  scale &  sigmoid &        True &      True &  0.708661 &  0.707143 &      0.75 &  0.706967 &  0.727941 &  0.741018 \\
+0 &  selected\_features &  0.1 &      2 &  scale &  sigmoid &        True &      True &  0.689498 &  0.683333 &  0.732143 &  0.688501 &  0.706897 &  0.721831 \\
+0 &  selected\_features &  0.1 &      2 &  scale &  sigmoid &        True &      True &  0.662295 &  0.754717 &  0.652174 &   0.66493 &  0.699708 &  0.670391 \\
+\bottomrule
+\end{tabular}

@@ -1,0 +1,8 @@
+\begin{tabular}{llllllllllll}
+\toprule
+{} &         Group &        class\_weight & max\_depth & n\_estimators & random\_state &  accuracy & precision &    recall &   roc\_auc &        f1 &        f2 \\
+\midrule
+0 &  all\_features &  balanced\_subsample &         2 &          880 &         1234 &  0.832677 &  0.897778 &  0.765152 &  0.835445 &  0.826176 &  0.788447 \\
+0 &  all\_features &  balanced\_subsample &         2 &          880 &         1234 &   0.72459 &  0.890625 &  0.619565 &  0.751931 &  0.730769 &  0.659722 \\
+\bottomrule
+\end{tabular}

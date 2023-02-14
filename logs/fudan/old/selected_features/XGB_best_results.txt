@@ -1,0 +1,9 @@
+\begin{tabular}{lllllllllllll}
+\toprule
+{} &              Group & gamma & max\_depth & min\_child\_weight & n\_estimators & random\_state &  accuracy & precision &    recall &   roc\_auc &        f1 &        f2 \\
+\midrule
+0 &  selected\_features &   0.2 &         4 &               14 &           25 &         1234 &  0.860092 &  0.867521 &  0.871245 &  0.859268 &  0.869379 &  0.870497 \\
+0 &  selected\_features &   0.2 &         4 &               14 &           25 &         1234 &  0.877863 &  0.915493 &  0.866667 &  0.879762 &  0.890411 &  0.876011 \\
+0 &  selected\_features &   0.2 &         4 &               14 &           25 &         1234 &  0.757576 &  0.953271 &  0.703448 &  0.804554 &  0.809524 &  0.742358 \\
+\bottomrule
+\end{tabular}

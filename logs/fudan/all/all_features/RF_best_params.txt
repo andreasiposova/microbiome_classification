@@ -1,0 +1,1 @@
+{'class_weight': 'balanced_subsample', 'max_depth': 3, 'min_samples_leaf': 8, 'min_samples_split':8, 'n_estimators': 880, 'random_state': 1234}

@@ -1,0 +1,1 @@
+{'C': 0.1, 'degree': 2, 'gamma': 'scale', 'kernel': 'sigmoid', 'probability': True, 'shrinking': True}
