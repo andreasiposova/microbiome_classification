@@ -44,12 +44,12 @@ young_old_labels_path = 'data/Yang_PRJNA763023/SraRunTable.csv'
 
 
 def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, file_name, group):
-    n_estimators= [150] #np.arange(100, 21, dtype=int)
-    max_depth = np.arange(2, 5, 1, dtype=int)
-    gamma = [0.001, 0.01, 0.1] #np.arange(0.5, 1.2, 0.2, dtype=int)
-    max_leaves = np.arange(2, 9, 2)
-    min_child_weight = [3, 6, 9]  # np.arange(5, , 5, dtype=int),
-    learning_rate = [0.01, 0.1] # 0.5, 1],
+    n_estimators= [30] #np.arange(100, 21, dtype=int)
+    max_depth = [3] #np.arange(2, 9, 3, dtype=int)
+    gamma = [0.1] #np.arange(0.5, 1.2, 0.2, dtype=int)
+    #max_leaves = np.arange(2, 9, 2)
+    min_child_weight = [6, 12]  # np.arange(5, , 5, dtype=int),
+    learning_rate = [0.1] # [0.01, 0.1] # 0.5, 1],
     subsample = [0.5]
     reg_alpha = [0.5, 1, 2]
     reg_lambda = [0.5, 1, 2]
@@ -60,7 +60,7 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
             'n_estimators': n_estimators,
             'max_depth': max_depth,
             #'gamma': gamma,
-            'max_leaves': max_leaves,
+            #'max_leaves': max_leaves,
             #'min_child_weight': min_child_weight,
             'learning_rate': learning_rate,
             'subsample': subsample,
@@ -76,11 +76,11 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
             'n_estimators': n_estimators,
             'max_depth': max_depth,
             'gamma': gamma,
-            'max_leaves': max_leaves,
+            #'max_leaves': max_leaves,
             'min_child_weight': min_child_weight,
             'learning_rate': learning_rate,
             'subsample': subsample,
-            'sample_pos_weight': [1.05],
+            #'sample_pos_weight': [1.05],
             'random_state': random_state,
             'reg_alpha': reg_alpha,
             'reg_lambda': reg_lambda
@@ -92,7 +92,7 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
             'n_estimators': n_estimators,
             'max_depth': max_depth,
             #'gamma': gamma,
-            'max_leaves': max_leaves,
+            #'max_leaves': max_leaves,
             #'min_child_weight': min_child_weight,
             'learning_rate': learning_rate,
             'subsample': subsample,
@@ -116,10 +116,10 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
 
     train_scores_gridsearch = []
     test_scores_gridsearch = []
-    cv = KFold(n_splits=10, random_state=1234, shuffle=True)
+    cv = KFold(n_splits=5, random_state=1234, shuffle=True)
     # Perform the grid search
     grid_search = GridSearchCV(estimator=model, param_grid=param_grid, cv=cv, scoring=scoring, refit='roc_auc',
-                               return_train_score=True, n_jobs=-1)
+                               return_train_score=True, n_jobs=16)
 
     print(f"fitting GridSearch on {file_name}")
     grid_search.fit(X_train, y_train)

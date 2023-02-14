@@ -1,1 +1,1 @@
-{'gamma': 0.0, 'learning_rate': 0.01, 'max_depth': 4, 'max_leaves': 4, 'min_child_weight': 12, 'n_estimators': 5, 'random_state': 1234, 'sample_pos_weight': 1.05, 'subsample': 0.5}
+{'gamma': 0.1, 'learning_rate': 0.08, 'max_depth': 3, 'max_leaves': 4, 'min_child_weight': 12, 'reg_alpha': 0.3, 'reg_lambda': 0.3, 'n_estimators': 35, 'random_state': 1234, 'sample_pos_weight': 1.05, 'subsample': 0.5}
