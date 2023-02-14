@@ -44,15 +44,15 @@ young_old_labels_path = 'data/Yang_PRJNA763023/SraRunTable.csv'
 
 
 def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, file_name, group):
-    n_estimators= [30] #np.arange(100, 21, dtype=int)
-    max_depth = [3] #np.arange(2, 9, 3, dtype=int)
-    gamma = [0.1] #np.arange(0.5, 1.2, 0.2, dtype=int)
+    n_estimators= [25] #np.arange(100, 21, dtype=int)
+    max_depth = [2] #np.arange(2, 9, 3, dtype=int)
+    gamma = [0.2] #np.arange(0.5, 1.2, 0.2, dtype=int)
     #max_leaves = np.arange(2, 9, 2)
-    min_child_weight = [6, 12]  # np.arange(5, , 5, dtype=int),
+    min_child_weight = [7]  # np.arange(5, , 5, dtype=int),
     learning_rate = [0.1] # [0.01, 0.1] # 0.5, 1],
     subsample = [0.5]
-    reg_alpha = [0.5, 1, 2]
-    reg_lambda = [0.5, 1, 2]
+    reg_alpha = [5, 7]
+    reg_lambda = [5, 7]
 
     random_state = [1234]
     if group == "old":
@@ -116,7 +116,7 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
 
     train_scores_gridsearch = []
     test_scores_gridsearch = []
-    cv = KFold(n_splits=5, random_state=1234, shuffle=True)
+    cv = KFold(n_splits=3, random_state=1234, shuffle=True)
     # Perform the grid search
     grid_search = GridSearchCV(estimator=model, param_grid=param_grid, cv=cv, scoring=scoring, refit='roc_auc',
                                return_train_score=True, n_jobs=16)
@@ -174,7 +174,7 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
     #best_params = best_auroc_params['params']
     best_params = best_params_cv
     if group == 'young': #and file_name == 'all_features':
-        threshold = 0.50
+        threshold = 0.52
     #if group == 'young' and file_name == 'selected_features':
         #threshold = 0.56
     if group == 'old': #and file_name == 'selected_features':

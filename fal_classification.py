@@ -272,7 +272,7 @@ def perform_classification(X_train, X_test, X_val, y_train, y_test, y_val, param
     elif clf_name == "XGB":
         clf = xgboost.XGBClassifier(**params)
         if group == 'young':
-            threshold = 0.52
+            threshold = 0.53
         if group == 'old':
             threshold = 0.50
         if group == 'all':
