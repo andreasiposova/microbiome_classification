@@ -25,19 +25,99 @@ all_results.to_csv(os.path.join(Config.LOG_DIR, 'fudan/final_results/final_resul
 groups = ['old', 'young', 'all']
 features = ['selected_features', 'all_features']
 
-def compare_models(all_results):
+def compare_models_selected_features(all_results):
+    groups = ['old', 'young', 'all']
     for i in groups:
 
-        df_filtered = all_results[(all_results['group'] == i) & (all_results['Feature Abundance Limits'] == 'no_transformation')
-                                  & (all_results['features'] == 'selected')]
+        df_filtered = all_results[(all_results['samples'] == i)]
+        df_filtered = df_filtered[(df_filtered['Feature Abundance Limits'] == 'no transformation')]
+        df_filtered = df_filtered[(df_filtered['features'] == 'selected')]
+                                  #& (all_results['features'] == 'selected')]
 
 
-    # Get the values of column 'roc_auc' from the filtered dataframe
-    roc_auc_values = df_filtered['roc_auc'].values
+        # Get the values of column 'roc_auc' from the filtered dataframe
+        roc_auc_values = list(df_filtered['roc_auc'].values)
+        classifiers = list(df_filtered['classifier'])
 
-    # Create the barplot
-    plt.bar(['old - no_transformation'], [roc_auc_values.mean()], yerr=[roc_auc_values.std()])
-    plt.xlabel('group and fal')
-    plt.ylabel('roc_auc')
-    plt.title('ROC AUC Barplot')
-    plt.show()
+        # Create the barplot
+        plt.bar(x = classifiers, height = roc_auc_values)
+        plt.xlabel('')
+        plt.ylabel('roc_auc')
+        plt.ylim((0,1))
+        plt.title('ROC AUC')
+
+        plt.savefig(os.path.join(Config.PLOTS_DIR, f'fudan/final_results/{i}/selected_features/barplot_roc_auc.png'))
+        plt.close()
+
+#compare_models_selected_features(all_results)
+
+def compare_models_all_features(all_results):
+    groups = ['old', 'young', 'all']
+    for i in groups:
+
+        df_filtered = all_results[(all_results['samples'] == i)]
+        df_filtered = df_filtered[(df_filtered['Feature Abundance Limits'] == 'no transformation')]
+        df_filtered = df_filtered[(df_filtered['features'] == 'all')]
+                                  #& (all_results['features'] == 'selected')]
+
+
+        # Get the values of column 'roc_auc' from the filtered dataframe
+        roc_auc_values = list(df_filtered['roc_auc'].values)
+        classifiers = list(df_filtered['classifier'])
+
+        # Create the barplot
+        plt.bar(x = classifiers, height = roc_auc_values)
+        plt.xlabel('')
+        plt.ylabel('roc_auc')
+        plt.ylim((0,1))
+        plt.title('ROC AUC')
+
+        plt.savefig(os.path.join(Config.PLOTS_DIR, f'fudan/final_results/{i}/all_features/barplot_roc_auc.png'))
+        plt.close()
+
+
+def compare_models_selected(all_results):
+    groups = ['old', 'young', 'all']
+    for i in groups:
+
+        df_filtered = all_results[(all_results['samples'] == i)]
+        df_filtered = df_filtered[(df_filtered['Feature Abundance Limits'] == 'no transformation')]
+        df_filtered = df_filtered[(df_filtered['features'] == 'selected')]
+        # & (all_results['features'] == 'selected')]
+
+
+        # Get the values of column 'roc_auc' from the filtered dataframe
+        df_filtered = df_filtered[['classifier', 'roc_auc', 'accuracy', 'precision', 'recall', 'f1', 'f2']]
+
+        cols = df_filtered.columns
+        cols = cols[1:]
+        for col in cols:
+            df_filtered[col] = (df_filtered[col] * 100).round(2)
+
+        df_filtered.to_csv(os.path.join(Config.LOG_DIR, f"fudan/final_results/{i}_selected_features_model_comparison.csv"))
+
+
+compare_models_selected(all_results)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
