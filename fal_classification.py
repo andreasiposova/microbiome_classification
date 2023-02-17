@@ -618,8 +618,8 @@ def xgb_results(data_name=FUDAN, fudan_filepath=fudan_filepath):
 
 #rf_res = rf_results()
 #svm_res = svm_results()
-xgb_res = xgb_results()
-#knn_res = knn_results()
+#xgb_res = xgb_results()
+knn_res = knn_results()
 """
 result_mega_table = pd.concat([rf_res, svm_res, xgb_res, knn_res])
 if not os.path.exists(str(Config.LOG_DIR) + "/" + FUDAN + "/final_results/"):

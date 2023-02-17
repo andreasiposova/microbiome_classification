@@ -2,7 +2,7 @@
 \toprule
 {} &              Group &        class\_weight & max\_depth & max\_features & min\_samples\_leaf & min\_samples\_split & n\_estimators & random\_state &  accuracy & precision &    recall &   roc\_auc &        f1 &        f2 \\
 \midrule
-0 &  selected\_features &  balanced\_subsample &         3 &         log2 &                8 &                 6 &          800 &         1234 &  0.852234 &  0.878788 &  0.811189 &   0.85154 &  0.843636 &  0.823864 \\
-0 &  selected\_features &  balanced\_subsample &         3 &         log2 &                8 &                 6 &          800 &         1234 &  0.747664 &  0.666667 &  0.615385 &  0.719457 &      0.64 &     0.625 \\
+0 &  selected\_features &  balanced\_subsample &         3 &         log2 &                8 &                 8 &          250 &         1234 &  0.865979 &  0.876812 &  0.846154 &  0.865644 &   0.86121 &  0.852113 \\
+0 &  selected\_features &  balanced\_subsample &         3 &         log2 &                8 &                 8 &          250 &         1234 &  0.579439 &  0.446429 &  0.641026 &  0.592572 &  0.526316 &  0.589623 \\
 \bottomrule
 \end{tabular}

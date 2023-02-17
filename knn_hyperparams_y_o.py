@@ -42,8 +42,8 @@ young_old_labels_path = 'data/Yang_PRJNA763023/SraRunTable.csv'
 
 
 def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, file_name, group):
-    n_neighbors = list(np.arange(151, 392, 11, dtype=int))
-    leaf_size = [30] #list(np.arange(1, 2, 1))
+    n_neighbors = list(np.arange(30, 45, 2, dtype=int))
+    leaf_size = list(np.arange(30, 40, 3))
     p = [1, 2]
     weights = ['uniform', 'distance']
     metric = ['minkowski']
@@ -403,9 +403,9 @@ def run_rf_tuning(data_name, filepath, group, select_features = True):
 
 #run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='young', select_features=True)
 #run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='old', select_features=True)
-#run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='all', select_features=True)
+run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='all', select_features=True)
 #run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='young', select_features=False)
-run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='old', select_features=False)
+#run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='old', select_features=False)
 #run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='all', select_features=False)
 
 """

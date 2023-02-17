@@ -1,9 +1,8 @@
-\begin{tabular}{llllllllllll}
+\begin{tabular}{lllllllllllll}
 \toprule
-{} &              Group & leaf\_size &     metric & n\_neighbors &   weights &  accuracy & precision &    recall &   roc\_auc &        f1 &        f2 \\
+{} &              Group & leaf\_size &     metric & n\_neighbors &  p &  weights &  accuracy & precision &    recall &   roc\_auc &        f1 &        f2 \\
 \midrule
-0 &  selected\_features &         4 &  minkowski &          13 &  distance &         1 &         1 &         1 &         1 &         1 &         1 \\
-0 &  selected\_features &         4 &  minkowski &          13 &  distance &  0.584475 &  0.690909 &  0.339286 &  0.590204 &   0.45509 &  0.377734 \\
-0 &  selected\_features &         4 &  minkowski &          13 &  distance &  0.586885 &  0.808511 &  0.413043 &  0.632142 &  0.546763 &  0.457831 \\
+0 &  selected\_features &        30 &  minkowski &          34 &  2 &  uniform &  0.708391 &  0.726519 &  0.699468 &  0.708708 &  0.712737 &  0.704716 \\
+0 &  selected\_features &        30 &  minkowski &          34 &  2 &  uniform &  0.570492 &  0.752381 &  0.429348 &  0.607236 &  0.546713 &  0.469679 \\
 \bottomrule
 \end{tabular}

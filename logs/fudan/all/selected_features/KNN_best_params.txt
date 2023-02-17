@@ -1,1 +1,1 @@
-{'leaf_size': 4, 'metric': 'minkowski', 'n_neighbors': 13, 'weights': 'distance'}
+{'leaf_size': 30, 'metric': 'minkowski', 'n_neighbors': 34, 'p': 2, 'weights': 'uniform'}

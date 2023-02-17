@@ -61,10 +61,10 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
             """
     if group == "young":
         param_grid = {
-            'n_estimators': np.arange(200, 810, 100, dtype=int),
+            'n_estimators': np.arange(250, 800, 50, dtype=int),
             'max_depth': np.arange(2, 4, 1, dtype=int),
-            'min_samples_split': np.arange(6, 16, 2, dtype=int),
-            'min_samples_leaf': np.arange(6, 16, 2, dtype=int),
+            'min_samples_split': np.arange(6, 13, 1, dtype=int),
+            'min_samples_leaf': np.arange(8, 13, 1, dtype=int),
             'max_features': ['sqrt', 'log2'],  # 'sqrt', 'log2'],
             'random_state': [1234],
             'class_weight': ['balanced_subsample']
@@ -82,7 +82,7 @@ def grid_search_rf(X_train, X_test, y_train, y_test, X_val, y_val, data_name, fi
 
     if group == "all":
         param_grid = {
-            'n_estimators': np.arange(5, 900, 50, dtype=int),
+            'n_estimators': np.arange(200, 500, 50, dtype=int),
             'max_depth': np.arange(2, 8, 1, dtype=int),
             'min_samples_split': np.arange(4, 10, 2, dtype=int),
             'min_samples_leaf': np.arange(4, 14, 2, dtype=int),
@@ -418,7 +418,7 @@ def run_rf_tuning(data_name, filepath, group, select_features = True):
 run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='young', select_features=True)
 #run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='old', select_features=True)
 #run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='all', select_features=True)
-run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='young', select_features=False)
+#run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='young', select_features=False)
 #run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='old', select_features=False)
 #run_rf_tuning(data_name=FUDAN, filepath=fudan_filepath, group='all', select_features=False)
 
