@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import os
-from utils import Config
+from src.utils import Config
 import matplotlib
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt

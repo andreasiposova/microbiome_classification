@@ -10,14 +10,13 @@ import matplotlib
 matplotlib.use('Agg')
 
 
-from feature_selection import calculate_feature_importance, select_features_from_paper
-from utils import setup_logging, Config
-from preprocessing import preprocess_data, preprocess_huadong, load_young_old_labels, full_preprocessing_y_o_labels, \
-    remove_correlated_features
+from feature_selection import select_features_from_paper
+from src.utils import Config
+from preprocessing import preprocess_data, preprocess_huadong, load_young_old_labels, full_preprocessing_y_o_labels
 
 from visualization import cm_plot, grid_search_train_test_plot
 
-from data_loading import load_tsv_files
+from src.utils.data_loading import load_tsv_files
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import make_scorer, accuracy_score, precision_score, recall_score, roc_auc_score, f1_score, fbeta_score
@@ -29,11 +28,11 @@ HUADONG2 = 'huadong2'
 
 file_names = list(("pielou_e_diversity", "simpson_diversity", "phylum_relative", "observed_otus_diversity", "family_relative", "class_relative", "fb_ratio", "enterotype", "genus_relative", "species_relative", "shannon_diversity", "domain_relative", "order_relative", "simpson_e_diversity"))
 
-yang_metadata_path = "data/Yang_PRJNA763023/metadata.csv"
-fudan_filepath = 'data/Yang_PRJNA763023/Yang_PRJNA763023_SE/parsed/normalized_results/'
-huadong_filepath_1 = 'data/Yang_PRJNA763023/Yang_PRJNA763023_PE_1/parsed/normalized_results'
-huadong_filepath_2 = 'data/Yang_PRJNA763023/Yang_PRJNA763023_PE_2/parsed/normalized_results'
-young_old_labels_path = 'data/Yang_PRJNA763023/SraRunTable.csv'
+yang_metadata_path = "../../data/Yang_PRJNA763023/metadata.csv"
+fudan_filepath = '../../data/Yang_PRJNA763023/Yang_PRJNA763023_SE/parsed/normalized_results/'
+huadong_filepath_1 = '../../data/Yang_PRJNA763023/Yang_PRJNA763023_PE_1/parsed/normalized_results'
+huadong_filepath_2 = '../../data/Yang_PRJNA763023/Yang_PRJNA763023_PE_2/parsed/normalized_results'
+young_old_labels_path = '../../data/Yang_PRJNA763023/SraRunTable.csv'
 
 
 

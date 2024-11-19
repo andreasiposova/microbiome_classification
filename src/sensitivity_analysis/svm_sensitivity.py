@@ -1,21 +1,19 @@
 import argparse
 import os
 import pandas as pd
-import numpy as np
 from sklearn import svm
 from sklearn.preprocessing import MinMaxScaler
 
-from feature_selection import select_features_from_paper
-from utils import setup_logging, Config
-from preprocessing import preprocess_data, preprocess_huadong, full_preprocessing_y_o_labels
+from src.feature_selection import select_features_from_paper
+from src.utils import setup_logging, Config
+from src.preprocessing import preprocess_data, preprocess_huadong, full_preprocessing_y_o_labels
 
 from datetime import datetime
-from data_loading import load_tsv_files, load_young_old_labels
+from src.utils.data_loading import load_tsv_files, load_young_old_labels
 
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import make_scorer, accuracy_score, precision_score, recall_score, roc_auc_score, f1_score, \
+from sklearn.metrics import accuracy_score, precision_score, recall_score, roc_auc_score, f1_score, \
     fbeta_score
-from sklearn.model_selection import GridSearchCV, RepeatedStratifiedKFold, cross_validate
+from sklearn.model_selection import RepeatedStratifiedKFold, cross_validate
 from sklearn.base import clone
 from sklearn.pipeline import Pipeline
 
@@ -25,7 +23,6 @@ import matplotlib
 
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
-from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix
 
 # Set up logging
 # logfile = setup_logging("tune_random_forest") # logger
@@ -44,11 +41,11 @@ file_names = list(
      "domain_relative",
      "order_relative", "simpson_e_diversity"))
 
-yang_metadata_path = "data/Yang_PRJNA763023/metadata.csv"
-fudan_filepath = 'data/Yang_PRJNA763023/Yang_PRJNA763023_SE/parsed/normalized_results/'
-huadong_filepath_1 = 'data/Yang_PRJNA763023/Yang_PRJNA763023_PE_1/parsed/normalized_results'
-huadong_filepath_2 = 'data/Yang_PRJNA763023/Yang_PRJNA763023_PE_2/parsed/normalized_results'
-young_old_labels_path = 'data/Yang_PRJNA763023/SraRunTable.csv'
+yang_metadata_path = "../../data/Yang_PRJNA763023/metadata.csv"
+fudan_filepath = '../../data/Yang_PRJNA763023/Yang_PRJNA763023_SE/parsed/normalized_results/'
+huadong_filepath_1 = '../../data/Yang_PRJNA763023/Yang_PRJNA763023_PE_1/parsed/normalized_results'
+huadong_filepath_2 = '../../data/Yang_PRJNA763023/Yang_PRJNA763023_PE_2/parsed/normalized_results'
+young_old_labels_path = '../../data/Yang_PRJNA763023/SraRunTable.csv'
 
 def calculate_performance(y_true, y_pred):
     accuracies = []

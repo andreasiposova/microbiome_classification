@@ -11,11 +11,9 @@ def calculate_feature_importance(X, y, group):
 
     # initialize the feature importance dictionary
     feature_importance = {}
-
     # iterate over each feature
     # for i in range(X.shape[1]):
     # create a new dataset with one feature removed
-    # X_new = X[:, [j for j in range(X.shape[1]) if j != i]]
     for feature in X.columns:
         # create a new dataset by excluding the current feature
         X_new = X[[col for col in X.columns if col != feature]]
@@ -107,28 +105,3 @@ def select_features_from_paper(df, group, key):
     return df_filtered
 
 #This will return a new DataFrame df_filtered that contains only the columns where the column name contains any of the 40 strings in the list.
-
-
-    """
-    clf = RandomForestClassifier(random_state=42)
-
-    # fit the model on the training data
-    clf.fit(X, y)
-
-    # get the feature importances
-    feature_importance = clf.feature_importances_
-
-    # get the feature names
-    feature_names = X.columns
-
-    # create a dictionary of feature importances
-    feature_importance_dict = {feature_names[i]: feature_importance[i] for i in range(len(feature_names))}
-
-    # sort the features by importance
-    sorted_features = sorted(feature_importance_dict.items(), key=lambda x: x[1], reverse=True)
-    top_features = sorted_features[:40]
-
-    return top_features
-
-
-    """

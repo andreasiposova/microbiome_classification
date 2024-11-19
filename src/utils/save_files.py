@@ -7,10 +7,10 @@ from sklearn.metrics import make_scorer, roc_auc_score, accuracy_score
 from sklearn.model_selection import KFold, GridSearchCV
 from sklearn.preprocessing import MinMaxScaler
 
-from data_loading import load_young_old_labels, load_tsv_files
+from src.utils.data_loading import load_young_old_labels, load_tsv_files
 from feature_selection import select_features_from_paper
 from preprocessing import full_preprocessing_y_o_labels, preprocess_data, preprocess_huadong
-from utils import Config
+from src.utils import Config
 
 FUDAN = 'fudan'
 HUADONG1 = 'huadong1'
@@ -18,11 +18,11 @@ HUADONG2 = 'huadong2'
 
 file_names = list(("pielou_e_diversity", "simpson_diversity", "phylum_relative", "observed_otus_diversity", "family_relative", "class_relative", "fb_ratio", "enterotype", "genus_relative", "species_relative", "shannon_diversity", "domain_relative", "order_relative", "simpson_e_diversity"))
 
-yang_metadata_path = "data/Yang_PRJNA763023/metadata.csv"
-fudan_filepath = 'data/Yang_PRJNA763023/Yang_PRJNA763023_SE/parsed/normalized_results/'
-huadong_filepath_1 = 'data/Yang_PRJNA763023/Yang_PRJNA763023_PE_1/parsed/normalized_results'
-huadong_filepath_2 = 'data/Yang_PRJNA763023/Yang_PRJNA763023_PE_2/parsed/normalized_results'
-young_old_labels_path = 'data/Yang_PRJNA763023/SraRunTable.csv'
+yang_metadata_path = "../../data/Yang_PRJNA763023/metadata.csv"
+fudan_filepath = '../../data/Yang_PRJNA763023/Yang_PRJNA763023_SE/parsed/normalized_results/'
+huadong_filepath_1 = '../../data/Yang_PRJNA763023/Yang_PRJNA763023_PE_1/parsed/normalized_results'
+huadong_filepath_2 = '../../data/Yang_PRJNA763023/Yang_PRJNA763023_PE_2/parsed/normalized_results'
+young_old_labels_path = '../../data/Yang_PRJNA763023/SraRunTable.csv'
 
 
 
