@@ -84,31 +84,6 @@ def load_preprocessed_data(fudan_filepath, huadong_filepath_1, huadong_filepath_
     return X_train, X_test, X_val, y_train, y_test, y_val
 
 
-def save_data_old(FUDAN, fudan_filepath, group, select_features):
-
-    if select_features == True:
-        if not os.path.exists(str(Config.DATA_DIR) + f"/preprocessed/{group}/selected_features"):
-            os.makedirs(os.path.join(Config.DATA_DIR, 'preprocessed', group, "selected_features"))
-        X_train, X_test, X_val, y_train, y_test, y_val = load_preprocessed_data(FUDAN, fudan_filepath, group, select_features)
-        y_train=pd.DataFrame(y_train)
-        y_val = pd.DataFrame(y_val)
-        X_train.to_csv(os.path.join(Config.DATA_DIR, 'preprocessed',  group, f"selected_features/X_train.csv"))
-        X_val.to_csv(os.path.join(Config.DATA_DIR, 'preprocessed',  group, f"selected_features/X_val.csv"))
-        y_train.to_csv(os.path.join(Config.DATA_DIR, 'preprocessed',  group, f"selected_features/y_train.csv"))
-        y_val.to_csv(os.path.join(Config.DATA_DIR, 'preprocessed',  group, f"selected_features/y_val.csv"))
-    if select_features == False:
-        if not os.path.exists(str(Config.DATA_DIR) + f"/preprocessed/{group}/all_features"):
-            os.makedirs(os.path.join(Config.DATA_DIR, 'preprocessed', group, "all_features"))
-        X_train, X_test, X_val, y_train, y_test, y_val = load_preprocessed_data(fudan_filepath, group, select_features)
-        y_train = pd.DataFrame(y_train)
-        y_val = pd.DataFrame(y_val)
-        X_train.to_csv(os.path.join(Config.DATA_DIR, 'preprocessed', group, f"all_features/X_train.csv"))
-        X_val.to_csv(os.path.join(Config.DATA_DIR, 'preprocessed', group, f"all_features/X_val.csv"))
-        y_train.to_csv(os.path.join(Config.DATA_DIR, 'preprocessed', group, f"all_features/y_train.csv"))
-        y_val.to_csv(os.path.join(Config.DATA_DIR, 'preprocessed', group, f"all_features/y_val.csv"))
-
-
-
 def save_data(
         fudan_filepath: str,
         huadong_filepath_1: str,
@@ -183,7 +158,7 @@ def save_data(
 
 def process_features(
         feature_mode: Literal['all', 'selected', 'both'],
-        group_mode: Literal['young', 'old', 'both'],
+        group_mode: Literal['young', 'old', 'all', 'both'],
         fudan_filepath: str,
         huadong_filepath_1: str,
         huadong_filepath_2: str,
@@ -196,18 +171,20 @@ def process_features(
 
     Args:
         feature_mode: Which feature set to process ('all', 'selected', or 'both')
-        group_mode: Which group to process ('young', 'old', or 'both')
+        group_mode: Which group to process ('young', 'old', or 'all')
         fudan_filepath: Path to the FUDAN dataset
         huadong_filepath_1: Path to first Huadong dataset
         huadong_filepath_2: Path to second Huadong dataset
         output_dir: Base directory for output files
     """
-    # Process groups
+
     groups_to_process = []
     if group_mode == 'both':
-        groups_to_process = ['young', 'old']
+        groups_to_process = ['young', 'old', 'all']
+    elif group_mode == 'all':
+        groups_to_process = ['all']
     else:
-        groups_to_process = [group_mode]
+        groups_to_process = [group_mode]  # either 'young' or 'old'
 
     # Process each group
     for group in groups_to_process:
@@ -312,7 +289,7 @@ def parse_arguments() -> Tuple[DataPaths, str, str, str]:
 
     # Add group and features arguments
     parser.add_argument('--group', type=str, default='both',
-                        choices=['young', 'old', 'both'],
+                        choices=['young', 'old', 'all', 'both'],
                         help='Group for data organization (default: both)')
     parser.add_argument('--features', type=str, default='both',
                         choices=['all', 'selected', 'both'],
