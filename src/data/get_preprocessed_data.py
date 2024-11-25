@@ -1,6 +1,7 @@
 import logging
 import os
 import os.path
+import yaml
 import pandas as pd
 import argparse
 from pathlib import Path
@@ -11,18 +12,6 @@ from src.data.preprocessor import full_preprocessing_y_o_labels, preprocess_data
 from src.utils import Config
 
 
-
-FUDAN = 'fudan'
-HUADONG1 = 'huadong1'
-HUADONG2 = 'huadong2'
-
-file_names = list(("pielou_e_diversity", "simpson_diversity", "phylum_relative", "observed_otus_diversity", "family_relative", "class_relative", "fb_ratio", "enterotype", "genus_relative", "species_relative", "shannon_diversity", "domain_relative", "order_relative", "simpson_e_diversity"))
-
-yang_metadata_path = "data/Yang_PRJNA763023/metadata.csv"
-fudan_filepath = 'data/Yang_PRJNA763023/Yang_PRJNA763023_SE/parsed/normalized_results/'
-huadong_filepath_1 = 'data/Yang_PRJNA763023/Yang_PRJNA763023_PE_1/parsed/normalized_results'
-huadong_filepath_2 = 'data/Yang_PRJNA763023/Yang_PRJNA763023_PE_2/parsed/normalized_results'
-young_old_labels_path = 'data/Yang_PRJNA763023/SraRunTable.csv'
 
 
 def load_preprocessed_data(fudan_filepath, huadong_filepath_1, huadong_filepath_2, labels_path, metadata_path, group, select_features):
@@ -315,33 +304,52 @@ def parse_arguments() -> Tuple[DataPaths, str, str, str]:
     return paths, args.log_level, args.features, args.group
 
 
+def load_config(config_path: str) -> dict:
+    with open(config_path, 'r') as file:
+        return yaml.safe_load(file)
+
 def main():
     try:
-        # Get and validate paths and arguments
-        paths, log_level, features_mode, group_mode = parse_arguments()
+
+        parser = argparse.ArgumentParser()
+        parser.add_argument('--config', type=str, required=True, help='Path to config file')
+        parser.add_argument('--log_level', type=str, default='INFO',
+                            choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'])
+        args = parser.parse_args()
+
+        config = load_config(args.config)
+
+        # Create paths object
+        paths = DataPaths(
+            fudan=Path(config['paths']['fudan_filepath']),
+            huadong_1=Path(config['paths']['huadong_filepath_1']),
+            huadong_2=Path(config['paths']['huadong_filepath_2']),
+            labels=Path(config['paths']['labels_path']),
+            metadata=Path(config['paths']['metadata_filepath']),
+            output=Path(config['paths']['output_dir'])
+        )
 
         # Setup logging
-        setup_logging(log_level)
+        setup_logging(args.log_level)
         logging.info("Starting data processing...")
 
-        # Validate all input paths
+        # Validate paths and create output dir
         validate_input_paths(paths)
         logging.info("All input files verified")
 
-        # Create output directory
         create_output_directory(paths.output)
 
-        # Process and save data based on feature mode and group mode
         process_features(
-            feature_mode=features_mode,
-            group_mode=group_mode,
-            fudan_filepath=str(paths.fudan),
-            huadong_filepath_1=str(paths.huadong_1),
-            huadong_filepath_2=str(paths.huadong_2),
-            labels_filepath=str(paths.labels),
-            metadata_filepath=str(paths.metadata),
-            output_dir=paths.output
+            feature_mode=config['processing']['features'],
+            group_mode=config['processing']['group'],
+            fudan_filepath=config['paths']['fudan_filepath'],
+            huadong_filepath_1=config['paths']['huadong_filepath_1'],
+            huadong_filepath_2=config['paths']['huadong_filepath_2'],
+            metadata_filepath=config['paths']['metadata_filepath'],
+            labels_filepath=config['paths']['labels_path'],
+            output_dir=config['paths']['output_dir']
         )
+
 
         logging.info("Processing completed successfully")
 
