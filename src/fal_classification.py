@@ -1,10 +1,8 @@
-import json
 import os
 import ast
 import numpy as np
 from math import sqrt
 
-import forestci as fci
 import pandas as pd
 import xgboost
 from sklearn import svm
@@ -14,15 +12,13 @@ from sklearn.metrics import accuracy_score, roc_auc_score, precision_score, reca
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import MinMaxScaler
 
-from data_loading import load_tsv_files, load_young_old_labels
+from src.utils.data_loading import load_tsv_files, load_young_old_labels
 from feature_selection import select_features_from_paper
 from preprocessing import preprocess_data, preprocess_huadong, full_preprocessing_y_o_labels, \
     apply_feature_abundance_limits
-from utils import Config
+from src.utils import Config
 
-import matplotlib
 #matplotlib.use('Agg')
-from matplotlib import pyplot as plt
 np.random.seed(43)
 
 from visualization import plot_conf_int, cm_plot, prob_boxplot, plot_prob_histogram
@@ -33,11 +29,11 @@ HUADONG2 = 'huadong2'
 
 file_names = list(("pielou_e_diversity", "simpson_diversity", "phylum_relative", "observed_otus_diversity", "family_relative", "class_relative", "fb_ratio", "enterotype", "genus_relative", "species_relative", "shannon_diversity", "domain_relative", "order_relative", "simpson_e_diversity"))
 
-yang_metadata_path = "data/Yang_PRJNA763023/metadata.csv"
-fudan_filepath = 'data/Yang_PRJNA763023/Yang_PRJNA763023_SE/parsed/normalized_results/'
-huadong_filepath_1 = 'data/Yang_PRJNA763023/Yang_PRJNA763023_PE_1/parsed/normalized_results'
-huadong_filepath_2 = 'data/Yang_PRJNA763023/Yang_PRJNA763023_PE_2/parsed/normalized_results'
-young_old_labels_path = 'data/Yang_PRJNA763023/SraRunTable.csv'
+yang_metadata_path = "../data/Yang_PRJNA763023/metadata.csv"
+fudan_filepath = '../data/Yang_PRJNA763023/Yang_PRJNA763023_SE/parsed/normalized_results/'
+huadong_filepath_1 = '../data/Yang_PRJNA763023/Yang_PRJNA763023_PE_1/parsed/normalized_results'
+huadong_filepath_2 = '../data/Yang_PRJNA763023/Yang_PRJNA763023_PE_2/parsed/normalized_results'
+young_old_labels_path = '../data/Yang_PRJNA763023/SraRunTable.csv'
 
 
 
@@ -376,7 +372,6 @@ def perform_classification(X_train, X_test, X_val, y_train, y_test, y_val, param
 
 
     return results_df
-
 
 
 

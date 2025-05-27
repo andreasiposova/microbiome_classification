@@ -1,0 +1,11 @@
+paths:
+  fudan_filepath: "data/Yang_PRJNA763023/Yang_PRJNA763023_SE/parsed/normalized_results/"
+  huadong_filepath_1: "data/Yang_PRJNA763023/Yang_PRJNA763023_PE_1/parsed/normalized_results"
+  huadong_filepath_2: "data/Yang_PRJNA763023/Yang_PRJNA763023_PE_2/parsed/normalized_results"
+  labels_path: "data/Yang_PRJNA763023/SraRunTable.csv"
+  metadata_filepath: "data/Yang_PRJNA763023/metadata.csv"
+  output_dir: "data"
+
+processing:
+  group: "all"
+  features: "both"

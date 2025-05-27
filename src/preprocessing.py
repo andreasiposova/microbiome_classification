@@ -1,11 +1,7 @@
 import numpy as np
 import pandas as pd
-import sklearn
-from sklearn import preprocessing
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import MinMaxScaler
 
-from data_loading import load_metadata, load_young_old_labels
+from src.utils.data_loading import load_metadata, load_young_old_labels
 
 
 def replace_inf_vals(X, y):
@@ -16,59 +12,36 @@ def replace_inf_vals(X, y):
         # replace inf and -inf in column with max value of column
         X[col].replace([np.inf, -np.inf], max_value_train, inplace=True)
         X[col].replace([-np.inf], min_value_train, inplace=True)
-        # drop the inf values from the test set
-        #X = X.replace([np.inf, -np.inf], np.nan).dropna()
-    # get the respective y when we drop observations from the test set
-    #y = y[y.index.isin(X.index)]
     return X, y
 
 
 def preprocess_data(dataset, metadata_path):#file_name, metadata_path):
-    #dataset = globals()[file_name]
-    #print(file_name)
-    #dataset = file_name
     #subset only young, or old based on which you want to work with, using the labels
     metadata = load_metadata(metadata_path)
     data = dataset.join(metadata)
     X = data.iloc[:, :-1]
     y = data.iloc[:, -1]
-
-    #X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=1234)
     X_train = X
     y_train = y
     X_test = pd.DataFrame()
     y_test = pd.DataFrame()
     X_train, y_train = replace_inf_vals(X_train, y_train)
-    #X_test, y_test =replace_inf_vals(X_test, y_test)
-
-    #labelEncoder
-    #le = preprocessing.LabelEncoder()
-    #le.fit(['healthy', 'CRC'])
-    #le.classes = np.array(['healthy','CRC'])
-    #y_train = le.transform(y_train)
-    #y_test = le.transform(y_test)
 
     label_mapping = {'healthy': 0, 'CRC': 1}
     y_train = [label_mapping[label] for label in y_train]
-    #y_test = [label_mapping[label] for label in y_test]
 
     return X_train, X_test, y_train, y_test
 
 def preprocess_huadong(dataset, metadata_path):#file_name, metadata_path):
-    #dataset = globals()[file_name]
-    #print(file_name)
-    #dataset = file_name
     metadata = load_metadata(metadata_path)
     data = dataset.join(metadata)
     X = data.iloc[:, :-1]
     y = data.iloc[:, -1]
-
     X, y = replace_inf_vals(X, y)
     X = X.fillna(0)
 
     label_mapping = {'healthy': 0, 'CRC': 1}
     y = [label_mapping[label] for label in y]
-
 
     return X, y
 
@@ -98,19 +71,13 @@ def preprocess_with_y_o_labels(dataset, metadata_path, y_o_labels_filepath, grou
 
     X = dataset.iloc[:, :-1]
     y = dataset.iloc[:, -1]
-
     X_train = X
     y_train = y
-    #X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=1234)
     X_test = pd.DataFrame()
     y_test = pd.DataFrame()
-    #X_train, y_train = replace_inf_vals(X_train, y_train)
-    #X_test, y_test = replace_inf_vals(X_test, y_test)
-
 
     label_mapping = {'healthy': 0, 'CRC': 1}
     y_train = [label_mapping[label] for label in y_train]
-    #y_test = [label_mapping[label] for label in y_test]
 
     return X_train, X_test, y_train, y_test
 
@@ -164,7 +131,6 @@ def remove_correlated_features(df, threshold):
     to_drop = [column for column in upper.columns if any(upper[column] > threshold)]
     df = df.drop(df[to_drop], axis=1)
     return df
-
 
 
 def apply_feature_abundance_limits(main_df, type):

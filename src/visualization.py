@@ -1,10 +1,8 @@
-from statistics import mean
 import os
 import numpy as np
 import pandas as pd
-from scipy.stats import stats
 
-from utils import Config
+from src.utils import Config
 
 import matplotlib
 matplotlib.use('Agg')
@@ -91,7 +89,6 @@ def grid_search_plot(hyperparam, scores, data_name, group, file_name):
     plt.title(file_name)
     plt.tight_layout()
     plt.savefig(os.path.join(Config.PLOTS_DIR, data_name, file_name, f"gridsearch_rf.png"))
-    #plt.show()
 
 
 def sensitivity_plot(hp_mean_metrics, data_name, group, file_name):
@@ -102,8 +99,6 @@ def sensitivity_plot(hp_mean_metrics, data_name, group, file_name):
     for i in columns_list:
         score = hp_mean_metrics[i].to_list()
         scores.append(score)
-    # values = hp_mean_metrics.Series.values.to_list()
-    # values_list = [val for val in values]
 
     if not os.path.exists(str(Config.PLOTS_DIR) + "/" + str(data_name) + "/" + group + "/" + str(file_name)):
         os.makedirs(os.path.join(Config.PLOTS_DIR, data_name, group, file_name))
@@ -123,8 +118,6 @@ def sensitivity_plot(hp_mean_metrics, data_name, group, file_name):
     plt.tight_layout()
     plt.savefig(
         os.path.join(Config.PLOTS_DIR, data_name, file_name, f"{hyperparam_name}_rf_sensitivity_gridsearch_avg.png"))
-    #plt.show()
-
 
 def cm_plot(y_test, y_pred, data_name, group, file_name, test_or_val, clf_name, final, fal, fal_type):
     if final==True:
@@ -195,27 +188,6 @@ def create_scores_dataframe(grid_clf, param_name, num_results=15, negative=True,
     scores_df = pd.DataFrame(cv_results).sort_values(by='rank_test_score')
 
 
-"""def plot_hyperparam_sensitivity(param, param_ranges, acc, prec, rec, roc_auc, f1, data_name, group, name):
-    plt.figure(figsize=(7, 5))
-    x_str = [str(value) for value in param_ranges[param]]
-    if "None" in x_str or "True" in x_str or "False" in x_str:
-        x = x_str
-    else:
-        x = param_ranges[param]
-    plt.plot(x, metric, label="Accuracy")
-    plt.plot(x, metric, label="Precision")
-    plt.plot(x, metric, label="Recall")
-    plt.plot(x, roc_auc, label="ROC AUC")
-    plt.plot(x, f1, label="F1")
-    # plt.plot(x, f2, label="F2")
-    plt.xlabel(param)
-    plt.ylabel("score")
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig(
-        os.path.join(os.path.join(Config.PLOTS_DIR, data_name, f"sensitivity/{param}_rf_sensitivity_test.png")))
-    plt.close()
-"""
 def plot_conf_int(y_true, y_pred, X_train, X_pred, clf, data_name, file_name, group, fal, fal_type, set_name, bins):
 
     if not os.path.exists(str(Config.PLOTS_DIR) + "/" + str(data_name) + "/final_results/" + str(group) + "/" + str(file_name) + "/RF"):
@@ -283,50 +255,6 @@ def prob_boxplot(y_true, probs, data_name, group, file_name, set_name, fal, fal_
 
     #plt.axhline(y=0.5, color='#b9b9b9', linestyle='--', linewidth=1, label='Threshold Value')
 
-
-    """
-    #crc = [probs[i, 1] for i in range(len(y_true)) if y_true[i]==1]
-    #healthy = [probs[i, 1] for i in range(len(y_true)) if y_true[i] == 0]
-    #t_statistic, p_value = stats.ttest_ind(crc, healthy)
-    differences = np.array(crc) - np.array(healthy)
-    t, p = stats.ttest_rel(crc, healthy)
-    # Plot the results
-
-
-
-    # Plot the positive and negative groups as boxplots
-    fig, ax = plt.subplots(1, 2, figsize=(5, 7), sharey=True)
-
-    # Create violin plots for positive and negative groups
-    #ax[0].violinplot(crc, showmeans=True, showmedians=False, showextrema=True)
-    #ax[1].violinplot(healthy, showmeans=True, showmedians=False, showextrema=True)
-
-    bplot1 = ax.boxplot(crc, positions=[1], widths=0.6)
-    bplot2 = ax.boxplot(healthy, positions=[2], widths=0.6)
-
-    # Add labels and title
-    # Add labels and title
-    ax.set_xlabel('Class')
-    ax.set_ylabel('Predicted POD')
-    ax.set_title('Predicted POD for CRC vs. healthy group')
-    ax.set_xticklabels(['CRC', 'Healthy'])
-
-    # Set y-limits for both subplots
-    ax[0].set_ylim([0, 1])
-    ax[1].set_ylim([0, 1])
-    yticks = np.arange(0, 1.1, 0.2)
-    ax[0].set_yticks(yticks)
-    ax[1].set_yticks(yticks)
-    x_ticks = np.arange(0, 1.1, 1)
-    ax[0].set_xticks(x_ticks)
-    ax[1].set_xticks(x_ticks)
-
-    # Add labels and title
-    ax[0].set_title('Positive Group')
-    ax[1].set_title('Negative Group')
-    ax[0].set_xlabel('Probability')
-    ax[1].set_xlabel('Probability')
-    """
     if not os.path.exists(os.path.join(Config.PLOTS_DIR, data_name, "final_results", group, file_name, "RF")):
         os.makedirs(os.path.join(Config.PLOTS_DIR, data_name, "final_results", group, file_name, "RF"))
     if fal==True:

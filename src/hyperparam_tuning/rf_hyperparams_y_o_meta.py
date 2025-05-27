@@ -1,15 +1,15 @@
 import pandas as pd
-from data_loading import load_metadata
+from src.utils.data_loading import load_metadata
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import train_test_split
 
 
-yang_metadata = load_metadata("data/Yang_PRJNA763023/metadata.csv")
+yang_metadata = load_metadata("../../data/Yang_PRJNA763023/metadata.csv")
 #yang_data = load_files("GASTRIC/Yang_PRJNA763023/Yang_PRJNA763023_PE_1")
 #load_yang()
-metaanalysis_metadata = pd.read_csv("data/CRC_metaanalysis/metadata.tsv", sep="\t")
-metaanalysis_data = pd.read_csv("data/CRC_metaanalysis/features.tsv", sep="\t")
+metaanalysis_metadata = pd.read_csv("../../data/CRC_metaanalysis/metadata.tsv", sep="\t")
+metaanalysis_data = pd.read_csv("../../data/CRC_metaanalysis/features.tsv", sep="\t")
 metaanalysis_data = metaanalysis_data.transpose()
 metaanalysis_data.columns = metaanalysis_data.iloc[0]
 metaanalysis_data = metaanalysis_data.drop(metaanalysis_data.index[0])
